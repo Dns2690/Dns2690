@@ -1,5 +1,5 @@
 <h1 align="center">Hi 👋, I'm Denis Salazar</h1>
-<h3 align="center">A passionate frontend developer from Costa Rica</h3>
+<h3 align="center">A passionate software developer from Costa Rica</h3>
 
 - 🔭 I’m currently working on [Analizador-de-platillos](https://github.com/CursoLimbo/Analizador-de-platillos)
 
