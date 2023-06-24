@@ -3,7 +3,7 @@
 
 - 🔭 I’m currently working on [Analizador-de-platillos](https://github.com/CursoLimbo/Analizador-de-platillos)
 
-- 🌱 I’m currently learning **React,TypeScrip,NodeJs**
+- 🌱 I’m currently learning **React,TypeScrip,NodeJs,C#,.Net**
 
 - 📫 How to reach me **dsalazar260990@gmail.com**
 
