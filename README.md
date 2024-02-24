@@ -1,7 +1,7 @@
 <h1 align="center">Hi 👋, I'm Denis Salazar</h1>
 <h3 align="center">A passionate software developer from Costa Rica</h3>
 
-- 🔭 I’m currently working on [Analizador-de-platillos](https://github.com/CursoLimbo/Analizador-de-platillos)
+- 🔭 I’m currently working on Boucardi
 
 - 🌱 I’m currently learning **React,TypeScrip,NodeJs,C#,.Net**
 
