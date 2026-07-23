@@ -2,7 +2,6 @@
 <p align="center">Full Stack Developer · Founder at Boucardi · Costa Rica 🇨🇷</p>
 
 ---
-
 I build business software end to end — from the Oracle database up to the frontend.
 Most of my work happens at **Boucardi**, the software company I run, where we build
 custom platforms for companies that need something more specific than an
