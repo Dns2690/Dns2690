@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
-import { getMeasurement, saveMeasurement } from '../lib/store'
+import ProfileSetup from '../components/ProfileSetup'
+import { getMeasurement, getProfile, saveMeasurement } from '../lib/store'
 import { METRICS } from '../lib/measurements'
 import type { MeasurementEntry } from '../lib/types'
 
@@ -19,21 +20,28 @@ export default function MeasurementForm() {
   const [date, setDate] = useState(today())
   const [values, setValues] = useState<FormValues>({})
   const [note, setNote] = useState('')
-  const [loaded, setLoaded] = useState(isNew)
+  const [loaded, setLoaded] = useState(false)
+  const [needsProfile, setNeedsProfile] = useState(false)
 
   useEffect(() => {
-    if (isNew) return
-    getMeasurement(id!).then((e) => {
-      if (e) {
-        setDate(e.date)
-        setNote(e.note ?? '')
-        const v: FormValues = {}
-        for (const m of METRICS) {
-          const val = e[m.key]
-          if (val != null) v[m.key] = String(val)
+    if (!isNew) {
+      getMeasurement(id!).then((e) => {
+        if (e) {
+          setDate(e.date)
+          setNote(e.note ?? '')
+          const v: FormValues = {}
+          for (const m of METRICS) {
+            const val = e[m.key]
+            if (val != null) v[m.key] = String(val)
+          }
+          setValues(v)
         }
-        setValues(v)
-      }
+        setLoaded(true)
+      })
+      return
+    }
+    getProfile().then((p) => {
+      setNeedsProfile(!p)
       setLoaded(true)
     })
   }, [id, isNew])
@@ -61,6 +69,17 @@ export default function MeasurementForm() {
       <div className="flex flex-1 flex-col">
         <TopBar title="Medición" back />
         <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+      </div>
+    )
+  }
+
+  if (needsProfile) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <TopBar title="Nueva medición" back />
+        <div className="p-4">
+          <ProfileSetup onDone={() => setNeedsProfile(false)} />
+        </div>
       </div>
     )
   }

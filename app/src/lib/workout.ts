@@ -83,6 +83,19 @@ export function removeExercise(session: WorkoutSession, exerciseIndex: number): 
   return { ...session, exercises: session.exercises.filter((_, i) => i !== exerciseIndex) }
 }
 
+export function replaceExerciseInSession(session: WorkoutSession, exerciseIndex: number, newExerciseId: string): WorkoutSession {
+  const exercises = session.exercises.map((se, i) => {
+    if (i !== exerciseIndex) return se
+    return {
+      exerciseId: newExerciseId,
+      sets: emptySets(se.sets.length),
+      targetReps: se.targetReps,
+      restSeconds: se.restSeconds,
+    }
+  })
+  return { ...session, exercises }
+}
+
 export function updateSet(
   session: WorkoutSession,
   exerciseIndex: number,

@@ -2,21 +2,28 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import { PROGRAMS } from '../data/programs'
-import { listSessions } from '../lib/store'
+import { listSessions, getProfile } from '../lib/store'
 import { computeProgress, TOTAL_SESSIONS } from '../lib/program'
-import type { WorkoutSession } from '../lib/types'
+import type { Profile, WorkoutSession } from '../lib/types'
 
 export default function ProgramsList() {
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     listSessions().then(setSessions)
+    getProfile().then((p) => setProfile(p ?? null))
   }, [])
 
   return (
     <div className="flex flex-1 flex-col">
       <TopBar title="Programas" />
       <div className="flex flex-col gap-3 p-4">
+        {profile && (
+          <p className="px-1 text-sm text-gray-200">
+            Hola {profile.name} {profile.avatar}
+          </p>
+        )}
         <p className="px-1 text-xs text-gray-500">
           Programas guiados de 1 año, 3 sesiones por semana. Elegí uno para ver tu progreso o empezar.
         </p>

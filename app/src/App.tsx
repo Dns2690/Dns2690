@@ -13,6 +13,7 @@ import ProgramMonth from './pages/ProgramMonth'
 import ProgramsList from './pages/ProgramsList'
 import Measurements from './pages/Measurements'
 import MeasurementForm from './pages/MeasurementForm'
+import Profile from './pages/Profile'
 
 function Shell() {
   return (
@@ -34,6 +35,7 @@ function Shell() {
           <Route path="/medidas" element={<Measurements />} />
           <Route path="/medidas/nueva" element={<MeasurementForm />} />
           <Route path="/medidas/:id" element={<MeasurementForm />} />
+          <Route path="/perfil" element={<Profile />} />
         </Routes>
       </main>
       <BottomNav />

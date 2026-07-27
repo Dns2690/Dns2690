@@ -7,12 +7,16 @@ const PAGE_SIZE = 60
 export default function ExercisePicker({
   onSelect,
   onClose,
+  initialBodyPart,
+  title,
 }: {
   onSelect: (exercise: Exercise) => void
   onClose: () => void
+  initialBodyPart?: string
+  title?: string
 }) {
   const [query, setQuery] = useState('')
-  const [bodyPart, setBodyPart] = useState('')
+  const [bodyPart, setBodyPart] = useState(initialBodyPart ?? '')
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   const results = useMemo(() => {
@@ -34,6 +38,7 @@ export default function ExercisePicker({
           className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none"
         />
       </div>
+      {title && <p className="border-b border-white/10 px-4 py-2 text-xs text-cyan-300">{title}</p>}
       <div className="border-b border-white/10 px-4 py-2">
         <select
           value={bodyPart}

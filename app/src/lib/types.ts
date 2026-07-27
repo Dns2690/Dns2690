@@ -109,3 +109,9 @@ export interface MeasurementEntry {
   legCm: number | null
   note?: string
 }
+
+export interface Profile {
+  name: string
+  avatar: string
+  createdAt: string
+}

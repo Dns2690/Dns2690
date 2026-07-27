@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import ExerciseCard from '../components/ExerciseCard'
 import { ALL_BODY_PARTS, ALL_EQUIPMENT, bodyPartLabel, equipmentLabel, filterExercises } from '../lib/exercises'
@@ -18,7 +19,18 @@ export default function Exercises() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar title="Ejercicios" />
+      <TopBar
+        title="Ejercicios"
+        right={
+          <Link
+            to="/perfil"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-lg text-gray-300 active:bg-white/10"
+            aria-label="Perfil y ajustes"
+          >
+            ⚙️
+          </Link>
+        }
+      />
       <div className="flex flex-col gap-2 px-4 py-3">
         <input
           value={query}

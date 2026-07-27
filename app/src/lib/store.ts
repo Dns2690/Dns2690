@@ -1,11 +1,12 @@
 import { createStore, get, set, del, keys } from 'idb-keyval'
-import type { MeasurementEntry, Routine, WorkoutSession } from './types'
+import type { MeasurementEntry, Profile, Routine, WorkoutSession } from './types'
 
-const store = createStore('mis-ejercicios', 'data')
+export const store = createStore('mis-ejercicios', 'data')
 
 const ROUTINE_PREFIX = 'routine:'
 const SESSION_PREFIX = 'session:'
 const MEASUREMENT_PREFIX = 'measurement:'
+const PROFILE_KEY = 'profile'
 
 function uid(): string {
   return crypto.randomUUID()
@@ -95,4 +96,12 @@ export async function saveMeasurement(
 
 export async function deleteMeasurement(id: string): Promise<void> {
   await del(MEASUREMENT_PREFIX + id, store)
+}
+
+export async function getProfile(): Promise<Profile | undefined> {
+  return get<Profile>(PROFILE_KEY, store)
+}
+
+export async function saveProfile(profile: Profile): Promise<void> {
+  await set(PROFILE_KEY, profile, store)
 }

@@ -1,6 +1,7 @@
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export default function TopBar({ title, back }: { title: string; back?: boolean }) {
+export default function TopBar({ title, back, right }: { title: string; back?: boolean; right?: ReactNode }) {
   const navigate = useNavigate()
   return (
     <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-white/10 bg-[#0b0d12]/95 px-4 py-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur">
@@ -13,7 +14,8 @@ export default function TopBar({ title, back }: { title: string; back?: boolean 
           ←
         </button>
       )}
-      <h1 className="truncate text-lg font-semibold text-gray-100">{title}</h1>
+      <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-gray-100">{title}</h1>
+      {right}
     </header>
   )
 }
