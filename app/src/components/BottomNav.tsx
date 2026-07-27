@@ -6,6 +6,7 @@ const items = [
   { to: '/rutinas', label: 'Rutinas', icon: '📋', end: false },
   { to: '/entrenar', label: 'Entrenar', icon: '⏱️', end: false },
   { to: '/historial', label: 'Historial', icon: '📈', end: false },
+  { to: '/medidas', label: 'Medidas', icon: '📏', end: false },
 ]
 
 export default function BottomNav() {
@@ -19,7 +20,7 @@ export default function BottomNav() {
           to={item.to}
           end={item.end}
           className={({ isActive }) =>
-            `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${
+            `flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] ${
               isActive ? 'text-cyan-400' : 'text-gray-400'
             }`
           }

@@ -1,10 +1,11 @@
 import { createStore, get, set, del, keys } from 'idb-keyval'
-import type { Routine, WorkoutSession } from './types'
+import type { MeasurementEntry, Routine, WorkoutSession } from './types'
 
 const store = createStore('mis-ejercicios', 'data')
 
 const ROUTINE_PREFIX = 'routine:'
 const SESSION_PREFIX = 'session:'
+const MEASUREMENT_PREFIX = 'measurement:'
 
 function uid(): string {
   return crypto.randomUUID()
@@ -67,4 +68,31 @@ export async function deleteSession(id: string): Promise<void> {
 
 export function newSessionId(): string {
   return uid()
+}
+
+export async function listMeasurements(): Promise<MeasurementEntry[]> {
+  const allKeys = (await keys(store)) as string[]
+  const entries = await Promise.all(
+    allKeys.filter((k) => k.startsWith(MEASUREMENT_PREFIX)).map((k) => get<MeasurementEntry>(k, store)),
+  )
+  return entries
+    .filter((e): e is MeasurementEntry => !!e)
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
+export async function getMeasurement(id: string): Promise<MeasurementEntry | undefined> {
+  return get<MeasurementEntry>(MEASUREMENT_PREFIX + id, store)
+}
+
+export async function saveMeasurement(
+  entry: Omit<MeasurementEntry, 'id'> & Partial<Pick<MeasurementEntry, 'id'>>,
+): Promise<MeasurementEntry> {
+  const id = entry.id ?? uid()
+  const full: MeasurementEntry = { ...entry, id }
+  await set(MEASUREMENT_PREFIX + id, full, store)
+  return full
+}
+
+export async function deleteMeasurement(id: string): Promise<void> {
+  await del(MEASUREMENT_PREFIX + id, store)
 }

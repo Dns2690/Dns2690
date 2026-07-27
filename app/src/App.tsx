@@ -11,6 +11,8 @@ import SessionDetail from './pages/SessionDetail'
 import Program from './pages/Program'
 import ProgramMonth from './pages/ProgramMonth'
 import ProgramsList from './pages/ProgramsList'
+import Measurements from './pages/Measurements'
+import MeasurementForm from './pages/MeasurementForm'
 
 function Shell() {
   return (
@@ -29,6 +31,9 @@ function Shell() {
           <Route path="/entrenar/:sessionId" element={<WorkoutSession />} />
           <Route path="/historial" element={<History />} />
           <Route path="/historial/:sessionId" element={<SessionDetail />} />
+          <Route path="/medidas" element={<Measurements />} />
+          <Route path="/medidas/nueva" element={<MeasurementForm />} />
+          <Route path="/medidas/:id" element={<MeasurementForm />} />
         </Routes>
       </main>
       <BottomNav />

@@ -97,3 +97,15 @@ export interface ProgramInfo {
   equipment: string
   months: ProgramMonth[]
 }
+
+export interface MeasurementEntry {
+  id: string
+  date: string
+  weightKg: number | null
+  chestCm: number | null
+  waistCm: number | null
+  hipsCm: number | null
+  armCm: number | null
+  legCm: number | null
+  note?: string
+}
