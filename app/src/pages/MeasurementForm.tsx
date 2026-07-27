@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import ProfileSetup from '../components/ProfileSetup'
 import { getMeasurement, getProfile, saveMeasurement } from '../lib/store'
-import { METRICS } from '../lib/measurements'
-import type { MeasurementEntry } from '../lib/types'
+import { computeDerived, METRICS } from '../lib/measurements'
+import type { MeasurementEntry, Profile } from '../lib/types'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -22,10 +22,11 @@ export default function MeasurementForm() {
   const [note, setNote] = useState('')
   const [loaded, setLoaded] = useState(false)
   const [needsProfile, setNeedsProfile] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     if (!isNew) {
-      getMeasurement(id!).then((e) => {
+      Promise.all([getMeasurement(id!), getProfile()]).then(([e, p]) => {
         if (e) {
           setDate(e.date)
           setNote(e.note ?? '')
@@ -36,19 +37,20 @@ export default function MeasurementForm() {
           }
           setValues(v)
         }
+        setProfile(p ?? null)
         setLoaded(true)
       })
       return
     }
     getProfile().then((p) => {
+      setProfile(p ?? null)
       setNeedsProfile(!p)
       setLoaded(true)
     })
   }, [id, isNew])
 
   async function handleSave() {
-    const entry: Omit<MeasurementEntry, 'id'> & Partial<Pick<MeasurementEntry, 'id'>> = {
-      id: isNew ? undefined : id,
+    const draft: Omit<MeasurementEntry, 'id'> = {
       date,
       weightKg: values.weightKg ? Number(values.weightKg) : null,
       chestCm: values.chestCm ? Number(values.chestCm) : null,
@@ -56,13 +58,16 @@ export default function MeasurementForm() {
       hipsCm: values.hipsCm ? Number(values.hipsCm) : null,
       armCm: values.armCm ? Number(values.armCm) : null,
       legCm: values.legCm ? Number(values.legCm) : null,
+      neckCm: values.neckCm ? Number(values.neckCm) : null,
       note: note.trim() || undefined,
     }
-    await saveMeasurement(entry)
+    const computed = computeDerived(draft, profile)
+    await saveMeasurement({ ...draft, computed, id: isNew ? undefined : id })
     navigate('/medidas')
   }
 
   const hasAnyValue = Object.values(values).some((v) => v.trim() !== '')
+  const missingForBodyFat = !profile?.heightCm || !profile?.sex
 
   if (!loaded) {
     return (
@@ -127,6 +132,16 @@ export default function MeasurementForm() {
         </label>
 
         <p className="text-xs text-gray-500">Completá solo lo que puedas medir — no hace falta llenar todo.</p>
+
+        {missingForBodyFat && (
+          <p className="rounded-lg bg-cyan-400/10 px-3 py-2 text-xs text-cyan-200">
+            Cargá cintura + cuello acá y tu altura y sexo en{' '}
+            <Link to="/perfil" className="underline">
+              Perfil
+            </Link>{' '}
+            para que calculemos tu % de grasa corporal automáticamente.
+          </p>
+        )}
 
         <button
           onClick={handleSave}

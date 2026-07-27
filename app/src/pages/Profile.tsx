@@ -3,12 +3,14 @@ import TopBar from '../components/TopBar'
 import { getProfile, saveProfile } from '../lib/store'
 import { AVATARS } from '../lib/profile'
 import { clearAllData, exportBackup, importBackup } from '../lib/backup'
-import type { Profile as ProfileType } from '../lib/types'
+import type { Profile as ProfileType, Sex } from '../lib/types'
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileType | null>(null)
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState(AVATARS[0])
+  const [heightCm, setHeightCm] = useState('')
+  const [sex, setSex] = useState<Sex | ''>('')
   const [loaded, setLoaded] = useState(false)
   const [status, setStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -19,6 +21,8 @@ export default function Profile() {
         setProfile(p)
         setName(p.name)
         setAvatar(p.avatar)
+        setHeightCm(p.heightCm ? String(p.heightCm) : '')
+        setSex(p.sex ?? '')
       }
       setLoaded(true)
     })
@@ -26,7 +30,13 @@ export default function Profile() {
 
   async function handleSaveProfile() {
     if (!name.trim()) return
-    const p: ProfileType = { name: name.trim(), avatar, createdAt: profile?.createdAt ?? new Date().toISOString() }
+    const p: ProfileType = {
+      name: name.trim(),
+      avatar,
+      createdAt: profile?.createdAt ?? new Date().toISOString(),
+      heightCm: heightCm ? Number(heightCm) : null,
+      sex: sex || null,
+    }
     await saveProfile(p)
     setProfile(p)
     setStatus('Perfil guardado.')
@@ -101,6 +111,36 @@ export default function Profile() {
             placeholder="Tu nombre"
             className="mb-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600"
           />
+
+          <p className="mb-1 text-xs text-gray-500">
+            Altura y sexo son opcionales — solo se usan para calcular tu % de grasa corporal en Medidas.
+          </p>
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-gray-400">Altura (cm)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={heightCm}
+                onChange={(e) => setHeightCm(e.target.value)}
+                placeholder="—"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-gray-400">Sexo</span>
+              <select
+                value={sex}
+                onChange={(e) => setSex(e.target.value as Sex | '')}
+                className="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-gray-100"
+              >
+                <option value="">—</option>
+                <option value="male">Hombre</option>
+                <option value="female">Mujer</option>
+              </select>
+            </label>
+          </div>
+
           <button
             onClick={handleSaveProfile}
             disabled={!name.trim()}

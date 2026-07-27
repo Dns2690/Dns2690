@@ -98,6 +98,14 @@ export interface ProgramInfo {
   months: ProgramMonth[]
 }
 
+export interface MeasurementComputed {
+  bodyFatPercent: number | null
+  bmi: number | null
+  leanMassKg: number | null
+  fatMassKg: number | null
+  waistHipRatio: number | null
+}
+
 export interface MeasurementEntry {
   id: string
   date: string
@@ -107,11 +115,17 @@ export interface MeasurementEntry {
   hipsCm: number | null
   armCm: number | null
   legCm: number | null
+  neckCm: number | null
   note?: string
+  computed?: MeasurementComputed
 }
+
+export type Sex = 'male' | 'female'
 
 export interface Profile {
   name: string
   avatar: string
   createdAt: string
+  heightCm?: number | null
+  sex?: Sex | null
 }

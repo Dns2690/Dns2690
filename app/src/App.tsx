@@ -15,6 +15,7 @@ import ProgramMonth from './pages/ProgramMonth'
 import ProgramsList from './pages/ProgramsList'
 import Measurements from './pages/Measurements'
 import MeasurementForm from './pages/MeasurementForm'
+import MeasurementTrend from './pages/MeasurementTrend'
 import Profile from './pages/Profile'
 
 function Shell() {
@@ -36,6 +37,7 @@ function Shell() {
           <Route path="/historial/:sessionId" element={<SessionDetail />} />
           <Route path="/medidas" element={<Measurements />} />
           <Route path="/medidas/nueva" element={<MeasurementForm />} />
+          <Route path="/medidas/grafico/:key" element={<MeasurementTrend />} />
           <Route path="/medidas/:id" element={<MeasurementForm />} />
           <Route path="/perfil" element={<Profile />} />
         </Routes>

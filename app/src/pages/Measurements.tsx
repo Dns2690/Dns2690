@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import Sparkline from '../components/Sparkline'
 import { deleteMeasurement, listMeasurements } from '../lib/store'
-import { METRICS, metricSeries } from '../lib/measurements'
+import { DERIVED_METRICS, derivedSeries, METRICS, metricSeries } from '../lib/measurements'
 import type { MeasurementEntry } from '../lib/types'
 
 function formatDate(iso: string): string {
@@ -24,6 +24,8 @@ export default function Measurements() {
     setEntries((await listMeasurements()) ?? [])
   }
 
+  const latestWithFatMass = entries?.find((e) => e.computed?.fatMassKg != null)?.computed
+
   return (
     <div className="flex flex-1 flex-col pb-6">
       <TopBar title="Medidas" />
@@ -39,38 +41,95 @@ export default function Measurements() {
 
         {entries?.length === 0 && (
           <p className="py-10 text-center text-sm text-gray-500">
-            Todavía no registraste mediciones. Anotá peso, pecho, cintura, glúteos, brazo y pierna cada mes para ver tu evolución.
+            Todavía no registraste mediciones. Anotá peso, pecho, cintura, glúteos, brazo, pierna y cuello cada mes
+            para ver tu evolución.
           </p>
         )}
 
         {entries && entries.length > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            {METRICS.map((m) => {
-              const series = metricSeries(entries, m.key)
-              if (series.length === 0) return null
-              const latest = series[series.length - 1].value
-              const first = series[0].value
-              const delta = series.length > 1 ? latest - first : null
-              return (
-                <div key={m.key} className="rounded-xl bg-white/5 p-3">
-                  <p className="text-xs text-gray-400">{m.icon} {m.label}</p>
-                  <p className="mt-1 text-lg font-semibold text-gray-100">
-                    {latest}
-                    <span className="ml-1 text-xs font-normal text-gray-500">{m.unit}</span>
-                  </p>
-                  {delta != null && delta !== 0 && (
-                    <p className={`text-xs ${delta < 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
-                      {delta > 0 ? '+' : ''}
-                      {Math.round(delta * 10) / 10} {m.unit} desde el inicio
-                    </p>
-                  )}
-                  <div className="mt-1">
-                    <Sparkline values={series.map((s) => s.value)} />
-                  </div>
+          <>
+            {DERIVED_METRICS.some((m) => derivedSeries(entries, m.key).length > 0) && (
+              <div className="flex flex-col gap-2">
+                <p className="px-1 text-xs text-gray-500">Cálculos</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {DERIVED_METRICS.map((m) => {
+                    const series = derivedSeries(entries, m.key)
+                    if (series.length === 0) return null
+                    const latest = series[series.length - 1].value
+                    const first = series[0].value
+                    const factor = 10 ** m.precision
+                    const delta = series.length > 1 ? Math.round((latest - first) * factor) / factor : null
+                    return (
+                      <Link
+                        key={m.key}
+                        to={`/medidas/grafico/${m.key}`}
+                        className="rounded-xl bg-white/5 p-3 active:bg-white/10"
+                      >
+                        <p className="text-xs text-gray-400">
+                          {m.icon} {m.label}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-gray-100">
+                          {latest}
+                          <span className="ml-1 text-xs font-normal text-gray-500">{m.unit}</span>
+                        </p>
+                        {delta != null && delta !== 0 && (
+                          <p className={`text-xs ${delta < 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
+                            {delta > 0 ? '+' : ''}
+                            {delta} {m.unit} desde el inicio
+                          </p>
+                        )}
+                        {m.key === 'bodyFatPercent' && latestWithFatMass?.fatMassKg != null && (
+                          <p className="text-[11px] text-gray-500">
+                            {latestWithFatMass.fatMassKg}kg grasa · {latestWithFatMass.leanMassKg}kg magra
+                          </p>
+                        )}
+                        <div className="mt-1">
+                          <Sparkline values={series.map((s) => s.value)} />
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <p className="px-1 text-xs text-gray-500">Mediciones</p>
+              <div className="grid grid-cols-2 gap-3">
+                {METRICS.map((m) => {
+                  const series = metricSeries(entries, m.key)
+                  if (series.length === 0) return null
+                  const latest = series[series.length - 1].value
+                  const first = series[0].value
+                  const delta = series.length > 1 ? latest - first : null
+                  return (
+                    <Link
+                      key={m.key}
+                      to={`/medidas/grafico/${m.key}`}
+                      className="rounded-xl bg-white/5 p-3 active:bg-white/10"
+                    >
+                      <p className="text-xs text-gray-400">
+                        {m.icon} {m.label}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-gray-100">
+                        {latest}
+                        <span className="ml-1 text-xs font-normal text-gray-500">{m.unit}</span>
+                      </p>
+                      {delta != null && delta !== 0 && (
+                        <p className={`text-xs ${delta < 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
+                          {delta > 0 ? '+' : ''}
+                          {Math.round(delta * 10) / 10} {m.unit} desde el inicio
+                        </p>
+                      )}
+                      <div className="mt-1">
+                        <Sparkline values={series.map((s) => s.value)} />
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </>
         )}
 
         {entries && entries.length > 0 && (
