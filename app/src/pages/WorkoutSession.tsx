@@ -25,7 +25,11 @@ export default function WorkoutSession() {
   async function handleFinish() {
     if (!session) return
     await persist({ ...session, finishedAt: new Date().toISOString() })
-    navigate(`/historial/${session.id}`, { replace: true })
+    if (session.programMeta) {
+      navigate('/ano1', { replace: true })
+    } else {
+      navigate(`/historial/${session.id}`, { replace: true })
+    }
   }
 
   if (session === undefined) {
@@ -58,7 +62,15 @@ export default function WorkoutSession() {
             <div key={exIdx} className="rounded-xl bg-white/5 p-3">
               <div className="mb-2 flex items-center gap-2">
                 <img src={imageUrl(ex)} alt="" className="h-10 w-10 rounded-lg bg-white/10 object-cover" />
-                <p className="min-w-0 flex-1 truncate text-sm font-medium capitalize text-gray-100">{ex.name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium capitalize text-gray-100">{ex.name}</p>
+                  {(se.targetReps || se.restSeconds) && (
+                    <p className="truncate text-[11px] text-cyan-400">
+                      Objetivo: {se.sets.length}×{se.targetReps ?? '?'}
+                      {se.restSeconds ? ` · Descanso ${se.restSeconds}s` : ''}
+                    </p>
+                  )}
+                </div>
                 <button
                   onClick={() => persist(removeExercise(session, exIdx))}
                   className="px-2 text-red-400"
@@ -67,6 +79,8 @@ export default function WorkoutSession() {
                   ✕
                 </button>
               </div>
+
+              {se.note && <p className="mb-2 rounded-lg bg-cyan-400/10 px-2 py-1.5 text-xs text-cyan-200">{se.note}</p>}
 
               <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-x-2 gap-y-1 text-xs text-gray-400">
                 <span></span>

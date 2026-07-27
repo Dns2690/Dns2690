@@ -45,6 +45,14 @@ export interface SetLog {
 export interface SessionExercise {
   exerciseId: string
   sets: SetLog[]
+  targetReps?: string
+  restSeconds?: number
+  note?: string
+}
+
+export interface ProgramSessionMeta {
+  month: number
+  day: 1 | 2 | 3
 }
 
 export interface WorkoutSession {
@@ -54,4 +62,28 @@ export interface WorkoutSession {
   startedAt: string
   finishedAt: string | null
   exercises: SessionExercise[]
+  programMeta?: ProgramSessionMeta
+}
+
+export interface ProgramExercise {
+  exerciseId: string
+  sets: number
+  reps: string
+  restSeconds: number
+  note?: string
+}
+
+export interface ProgramDay {
+  day: 1 | 2 | 3
+  name: string
+  exercises: ProgramExercise[]
+}
+
+export interface ProgramMonth {
+  month: number
+  title: string
+  focus: string
+  description: string
+  weeks: number
+  days: [ProgramDay, ProgramDay, ProgramDay]
 }

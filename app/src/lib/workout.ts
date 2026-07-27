@@ -1,4 +1,5 @@
 import { getRoutine, newSessionId, saveSession } from './store'
+import { getProgramDay, getProgramMonth } from './program'
 import type { Routine, SessionExercise, SetLog, WorkoutSession } from './types'
 
 function emptySets(count: number): SetLog[] {
@@ -20,6 +21,7 @@ export async function startSession(routine?: Routine): Promise<WorkoutSession> {
   const exercises: SessionExercise[] = (routine?.exercises ?? []).map((re) => ({
     exerciseId: re.exerciseId,
     sets: emptySets(re.targetSets),
+    targetReps: re.targetReps,
   }))
 
   const session: WorkoutSession = {
@@ -29,6 +31,32 @@ export async function startSession(routine?: Routine): Promise<WorkoutSession> {
     startedAt: new Date().toISOString(),
     finishedAt: null,
     exercises,
+  }
+  await saveSession(session)
+  return session
+}
+
+export async function startProgramSession(month: number, day: 1 | 2 | 3): Promise<WorkoutSession> {
+  const monthData = getProgramMonth(month)
+  const dayData = getProgramDay(month, day)
+  if (!monthData || !dayData) throw new Error(`Programa: mes ${month} día ${day} no existe`)
+
+  const exercises: SessionExercise[] = dayData.exercises.map((pe) => ({
+    exerciseId: pe.exerciseId,
+    sets: emptySets(pe.sets),
+    targetReps: pe.reps,
+    restSeconds: pe.restSeconds,
+    note: pe.note,
+  }))
+
+  const session: WorkoutSession = {
+    id: newSessionId(),
+    routineId: null,
+    routineName: `Año 1 · Mes ${month} · ${dayData.name}`,
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    exercises,
+    programMeta: { month, day },
   }
   await saveSession(session)
   return session
