@@ -7,8 +7,8 @@ export default function Splash({ onDone }: { onDone: () => void }) {
   const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
-    const t1 = setTimeout(() => setLeaving(true), 2100)
-    const t2 = setTimeout(onDone, 2600)
+    const t1 = setTimeout(() => setLeaving(true), 3400)
+    const t2 = setTimeout(onDone, 4000)
     return () => {
       clearTimeout(t1)
       clearTimeout(t2)
@@ -17,33 +17,43 @@ export default function Splash({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-7 bg-[#0b0d12] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 overflow-hidden bg-[#0b0d12] transition-opacity duration-[600ms] ${
         leaving ? 'opacity-0' : 'opacity-100'
       }`}
     >
       <div
-        className="flex items-center gap-2 opacity-0"
-        style={{ animation: 'splash-in 0.6s ease-out 0.15s forwards' }}
+        className="absolute h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl"
+        style={{ animation: 'splash-glow-bg 2.4s ease-in-out infinite' }}
+        aria-hidden="true"
+      />
+
+      <div
+        className="relative opacity-0"
+        style={{ animation: 'splash-pop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards' }}
       >
-        <svg viewBox="0 0 24 24" width={20} height={20} fill="#9ca3af" aria-hidden="true">
-          <path d={GITHUB_PATH} />
-        </svg>
-        <span className="text-sm text-gray-400">Dns2690</span>
-        <span className="mx-0.5 text-gray-600">×</span>
-        <span className="text-base leading-none text-cyan-400" aria-hidden="true">
-          ✦
-        </span>
-        <span className="text-sm text-gray-400">Claude</span>
+        <p className="bg-gradient-to-r from-cyan-300 to-cyan-500 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent">
+          WorkoutOS
+        </p>
       </div>
 
       <div
-        className="text-center opacity-0"
-        style={{ animation: 'splash-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.85s forwards' }}
+        className="relative flex items-center gap-1.5 opacity-0"
+        style={{ animation: 'splash-in 0.6s ease-out 1.2s forwards' }}
       >
-        <p className="bg-gradient-to-r from-cyan-300 to-cyan-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
-          WorkoutOS
-        </p>
-        <p className="mt-1 text-xs text-gray-500">tu entrenamiento, todo el año</p>
+        <span className="text-xs text-gray-500">By</span>
+        <svg viewBox="0 0 24 24" width={14} height={14} fill="#9ca3af" aria-hidden="true">
+          <path d={GITHUB_PATH} />
+        </svg>
+        <span className="text-xs text-gray-400">Dns2690</span>
+        <span className="text-xs text-gray-600">+</span>
+        <span
+          className="flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400/10 text-[10px] leading-none text-cyan-400"
+          style={{ animation: 'splash-glow 1.8s ease-in-out 1.8s infinite' }}
+          aria-hidden="true"
+        >
+          ✦
+        </span>
+        <span className="text-xs text-gray-400">AI</span>
       </div>
     </div>
   )
