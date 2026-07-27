@@ -9,11 +9,11 @@ export interface MetricConfig {
 
 export const METRICS: MetricConfig[] = [
   { key: 'weightKg', label: 'Peso', unit: 'kg', icon: '⚖️' },
-  { key: 'chestCm', label: 'Pecho', unit: 'cm', icon: '📏' },
+  { key: 'hipsCm', label: 'Glúteos', unit: 'cm', icon: '🍑' },
   { key: 'waistCm', label: 'Cintura', unit: 'cm', icon: '📏' },
-  { key: 'hipsCm', label: 'Glúteos', unit: 'cm', icon: '📏' },
-  { key: 'armCm', label: 'Brazo', unit: 'cm', icon: '📏' },
+  { key: 'chestCm', label: 'Pecho', unit: 'cm', icon: '📏' },
   { key: 'legCm', label: 'Pierna', unit: 'cm', icon: '📏' },
+  { key: 'armCm', label: 'Brazo', unit: 'cm', icon: '📏' },
   { key: 'neckCm', label: 'Cuello', unit: 'cm', icon: '📏' },
 ]
 

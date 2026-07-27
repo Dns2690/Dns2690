@@ -23,6 +23,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100svh;
+  min-height: 100dvh;
 }
 
 input, select, textarea, button {
