@@ -77,7 +77,14 @@ export default function RoutineEditor() {
             if (!ex) return null
             return (
               <div key={i} className="flex items-center gap-2 rounded-xl bg-white/5 p-2">
-                <img src={imageUrl(ex)} alt="" className="h-12 w-12 rounded-lg bg-white/10 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => navigate(`/ejercicio/${ex.id}`)}
+                  className="flex-shrink-0"
+                  aria-label={`Ver ${ex.name}`}
+                >
+                  <img src={imageUrl(ex)} alt="" className="h-12 w-12 rounded-lg bg-white/10 object-cover" />
+                </button>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm capitalize text-gray-100">{ex.name}</p>
                   <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">

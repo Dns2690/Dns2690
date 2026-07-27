@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import { getExercise, imageUrl } from '../lib/exercises'
 import { getProgramMonth } from '../lib/program'
@@ -56,7 +56,11 @@ export default function ProgramMonth() {
                 const ex = getExercise(pe.exerciseId)
                 if (!ex) return null
                 return (
-                  <div key={i} className="flex items-center gap-2">
+                  <Link
+                    key={i}
+                    to={`/ejercicio/${ex.id}`}
+                    className="flex items-center gap-2 rounded-lg active:bg-white/10"
+                  >
                     <img src={imageUrl(ex)} alt="" className="h-9 w-9 flex-shrink-0 rounded-lg bg-white/10 object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium capitalize text-gray-200">{ex.name}</p>
@@ -64,7 +68,7 @@ export default function ProgramMonth() {
                         {pe.sets}×{pe.reps} · descanso {pe.restSeconds}s
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>

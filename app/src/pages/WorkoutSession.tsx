@@ -98,7 +98,14 @@ export default function WorkoutSession() {
           return (
             <div key={exIdx} className="rounded-xl bg-white/5 p-3">
               <div className="mb-2 flex items-center gap-2">
-                <img src={imageUrl(ex)} alt="" className="h-10 w-10 rounded-lg bg-white/10 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => navigate(`/ejercicio/${ex.id}`)}
+                  className="flex-shrink-0"
+                  aria-label={`Ver ${ex.name}`}
+                >
+                  <img src={imageUrl(ex)} alt="" className="h-10 w-10 rounded-lg bg-white/10 object-cover" />
+                </button>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium capitalize text-gray-100">{ex.name}</p>
                   {(se.targetReps || se.restSeconds) && (

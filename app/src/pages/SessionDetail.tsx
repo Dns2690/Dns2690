@@ -62,10 +62,14 @@ export default function SessionDetail() {
           const doneSets = se.sets.filter((s) => s.done)
           return (
             <div key={i} className="rounded-xl bg-white/5 p-3">
-              <div className="mb-1 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate(`/ejercicio/${ex.id}`)}
+                className="mb-1 flex items-center gap-2 text-left"
+              >
                 <img src={imageUrl(ex)} alt="" className="h-10 w-10 rounded-lg bg-white/10 object-cover" />
                 <p className="truncate text-sm font-medium capitalize text-gray-100">{ex.name}</p>
-              </div>
+              </button>
               {doneSets.length === 0 ? (
                 <p className="pl-1 text-xs text-gray-500">Sin series registradas</p>
               ) : (
