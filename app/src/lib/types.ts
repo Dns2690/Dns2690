@@ -51,6 +51,7 @@ export interface SessionExercise {
 }
 
 export interface ProgramSessionMeta {
+  programId: string
   month: number
   day: 1 | 2 | 3
 }
@@ -86,4 +87,13 @@ export interface ProgramMonth {
   description: string
   weeks: number
   days: [ProgramDay, ProgramDay, ProgramDay]
+}
+
+export interface ProgramInfo {
+  id: string
+  name: string
+  tagline: string
+  icon: string
+  equipment: string
+  months: ProgramMonth[]
 }

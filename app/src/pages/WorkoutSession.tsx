@@ -26,7 +26,7 @@ export default function WorkoutSession() {
     if (!session) return
     await persist({ ...session, finishedAt: new Date().toISOString() })
     if (session.programMeta) {
-      navigate('/ano1', { replace: true })
+      navigate(`/programas/${session.programMeta.programId}`, { replace: true })
     } else {
       navigate(`/historial/${session.id}`, { replace: true })
     }

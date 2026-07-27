@@ -10,6 +10,7 @@ import History from './pages/History'
 import SessionDetail from './pages/SessionDetail'
 import Program from './pages/Program'
 import ProgramMonth from './pages/ProgramMonth'
+import ProgramsList from './pages/ProgramsList'
 
 function Shell() {
   return (
@@ -18,8 +19,9 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Exercises />} />
           <Route path="/ejercicio/:id" element={<ExerciseDetail />} />
-          <Route path="/ano1" element={<Program />} />
-          <Route path="/ano1/mes/:month" element={<ProgramMonth />} />
+          <Route path="/programas" element={<ProgramsList />} />
+          <Route path="/programas/:programId" element={<Program />} />
+          <Route path="/programas/:programId/mes/:month" element={<ProgramMonth />} />
           <Route path="/rutinas" element={<Routines />} />
           <Route path="/rutinas/nueva" element={<RoutineEditor />} />
           <Route path="/rutinas/:id" element={<RoutineEditor />} />

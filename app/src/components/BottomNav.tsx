@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 const items = [
   { to: '/', label: 'Ejercicios', icon: '🏋️', end: true },
-  { to: '/ano1', label: 'Año 1', icon: '🎯', end: false },
+  { to: '/programas', label: 'Programas', icon: '🎯', end: false },
   { to: '/rutinas', label: 'Rutinas', icon: '📋', end: false },
   { to: '/entrenar', label: 'Entrenar', icon: '⏱️', end: false },
   { to: '/historial', label: 'Historial', icon: '📈', end: false },

@@ -1,4 +1,4 @@
-import type { ProgramMonth } from '../lib/types'
+import type { ProgramInfo, ProgramMonth } from '../../lib/types'
 
 /**
  * "Año 1": programa de 52 semanas / 3 sesiones por semana (156 sesiones) pensado
@@ -7,9 +7,7 @@ import type { ProgramMonth } from '../lib/types'
  * meses 9-12 pasan a una división empuje/tracción/pierna con mayor intensidad.
  * Los IDs de ejercicio corresponden a src/data/exercises.json.
  */
-export const WEEKS_PER_MONTH: number[] = [4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 4, 5]
-
-export const PROGRAM_MONTHS: ProgramMonth[] = [
+const MONTHS: ProgramMonth[] = [
   {
     month: 1,
     title: 'Cimientos',
@@ -563,3 +561,12 @@ export const PROGRAM_MONTHS: ProgramMonth[] = [
     ],
   },
 ]
+
+export const YEAR1: ProgramInfo = {
+  id: 'year1',
+  name: 'Año 1',
+  tagline: 'De sedentario a entrenar solo, sin equipo',
+  icon: '🎯',
+  equipment: 'Sin equipo al inicio, mancuernas caseras desde el mes 5',
+  months: MONTHS,
+}

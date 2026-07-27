@@ -6,16 +6,16 @@ import { getProgramMonth } from '../lib/program'
 import { startProgramSession } from '../lib/workout'
 
 export default function ProgramMonth() {
-  const { month: monthParam = '' } = useParams()
+  const { programId = '', month: monthParam = '' } = useParams()
   const navigate = useNavigate()
   const [starting, setStarting] = useState<number | null>(null)
   const month = Number(monthParam)
-  const data = getProgramMonth(month)
+  const data = getProgramMonth(programId, month)
 
   if (!data) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Año 1" back />
+        <TopBar title="Programa" back />
         <p className="p-6 text-center text-sm text-gray-500">Mes no encontrado.</p>
       </div>
     )
@@ -24,7 +24,7 @@ export default function ProgramMonth() {
   async function handleStart(day: 1 | 2 | 3) {
     if (starting !== null) return
     setStarting(day)
-    const s = await startProgramSession(month, day)
+    const s = await startProgramSession(programId, month, day)
     navigate(`/entrenar/${s.id}`)
   }
 

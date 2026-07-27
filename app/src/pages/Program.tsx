@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import { listSessions } from '../lib/store'
 import { startProgramSession } from '../lib/workout'
+import { getProgramInfo } from '../data/programs'
 import {
   computeProgress,
   currentStreakWeeks,
@@ -15,10 +16,10 @@ import {
   type ProgramProgress,
   type WeekActivity,
 } from '../lib/program'
-import { PROGRAM_MONTHS } from '../data/program'
 import type { WorkoutSession } from '../lib/types'
 
 export default function Program() {
+  const { programId = '' } = useParams()
   const navigate = useNavigate()
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null)
   const [starting, setStarting] = useState(false)
@@ -27,31 +28,42 @@ export default function Program() {
     listSessions().then(setSessions)
   }, [])
 
+  const program = getProgramInfo(programId)
+
+  if (!program) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <TopBar title="Programa" back />
+        <p className="p-6 text-center text-sm text-gray-500">Programa no encontrado.</p>
+      </div>
+    )
+  }
+
   if (sessions === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Año 1" />
+        <TopBar title={program.name} back />
         <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
       </div>
     )
   }
 
-  const progress: ProgramProgress = computeProgress(sessions)
-  const activity: WeekActivity[] = last12WeeksActivity(sessions)
+  const progress: ProgramProgress = computeProgress(sessions, programId)
+  const activity: WeekActivity[] = last12WeeksActivity(sessions, programId)
   const streak = currentStreakWeeks(activity)
-  const nextMonth = progress.next ? getProgramMonth(progress.next.month) : null
-  const nextDay = progress.next ? getProgramDay(progress.next.month, progress.next.day) : null
+  const nextMonth = progress.next ? getProgramMonth(programId, progress.next.month) : null
+  const nextDay = progress.next ? getProgramDay(programId, progress.next.month, progress.next.day) : null
 
   async function handleStart() {
     if (!progress.next || starting) return
     setStarting(true)
-    const s = await startProgramSession(progress.next.month, progress.next.day)
+    const s = await startProgramSession(programId, progress.next.month, progress.next.day)
     navigate(`/entrenar/${s.id}`)
   }
 
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <TopBar title="Año 1" />
+      <TopBar title={program.name} back />
 
       <div className="flex flex-col gap-4 p-4">
         <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-white/5 p-4">
@@ -82,7 +94,7 @@ export default function Program() {
           </div>
         ) : (
           <div className="rounded-2xl bg-amber-400/10 p-4 text-center">
-            <p className="text-sm text-amber-300">🎉 Completaste las 156 sesiones de tu primer año.</p>
+            <p className="text-sm text-amber-300">🎉 Completaste las 156 sesiones de este programa.</p>
           </div>
         )}
 
@@ -107,7 +119,7 @@ export default function Program() {
 
         <div className="flex flex-col gap-2">
           <p className="px-1 text-xs text-gray-500">Recorrido del año</p>
-          {PROGRAM_MONTHS.map((m) => {
+          {program.months.map((m) => {
             const done = progress.countByMonth[m.month] ?? 0
             const total = m.weeks * 3
             const isCurrent = progress.next?.month === m.month
@@ -115,7 +127,7 @@ export default function Program() {
             return (
               <Link
                 key={m.month}
-                to={`/ano1/mes/${m.month}`}
+                to={`/programas/${programId}/mes/${m.month}`}
                 className={`flex items-center justify-between rounded-xl p-3 ${
                   isCurrent ? 'bg-cyan-400/10 ring-1 ring-cyan-400/40' : 'bg-white/5'
                 }`}
