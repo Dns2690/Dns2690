@@ -1,7 +1,8 @@
-# Mis Ejercicios
+# WorkoutOS
 
 PWA personal (uso individual, no comercial) para explorar ejercicios de gimnasio, armar
-rutinas propias y registrar entrenamientos (peso, repeticiones, historial).
+rutinas propias, seguir programas guiados de 1 año, registrar entrenamientos (peso,
+repeticiones, historial) y llevar mediciones corporales.
 
 Los datos de ejercicios (1324 ejercicios, instrucciones en español) provienen de
 [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset)

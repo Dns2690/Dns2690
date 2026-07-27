@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
+import Splash from './components/Splash'
 import Exercises from './pages/Exercises'
 import ExerciseDetail from './pages/ExerciseDetail'
 import Routines from './pages/Routines'
@@ -44,8 +46,10 @@ function Shell() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true)
   return (
     <HashRouter>
+      {showSplash && <Splash onDone={() => setShowSplash(false)} />}
       <Shell />
     </HashRouter>
   )
