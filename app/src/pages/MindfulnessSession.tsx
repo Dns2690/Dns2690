@@ -10,6 +10,7 @@ import {
 } from '../lib/mindfulness'
 import { bell, startAmbient, stopAmbient, type AmbientKind } from '../lib/ambient'
 import { closeAudio, releaseWakeLock, requestWakeLock, unlockAudio } from '../lib/feedback'
+import { cancelVoice, speakGuidance } from '../lib/voice'
 import { getMindfulnessSettings, saveMindfulnessLog } from '../lib/store'
 import { todayKey } from '../lib/kegel'
 import type { MindfulnessSession as Session, MindfulnessSettings } from '../lib/types'
@@ -22,6 +23,8 @@ const DEFAULTS: MindfulnessSettings = {
   ambient: 'drone',
   ambientVolume: 0.55,
   bells: true,
+  voiceEnabled: false,
+  voiceRate: 0.85,
 }
 
 export default function MindfulnessSession() {
@@ -48,6 +51,7 @@ export default function MindfulnessSession() {
   const cueIndexRef = useRef(-1)
   const shownSecondRef = useRef(-1)
   const finishedRef = useRef(false)
+  const voiceTimers = useRef<number[]>([])
 
   useEffect(() => {
     settingsRef.current = settings
@@ -70,6 +74,21 @@ export default function MindfulnessSession() {
     }
   }, [])
 
+  function say(text: string, delayMs = 0) {
+    const s = settingsRef.current
+    if (!s.voiceEnabled) return
+    const fire = () =>
+      speakGuidance(text, {
+        enabled: true,
+        voiceURI: s.voiceURI,
+        rate: s.voiceRate,
+        ambientVolume: s.ambientVolume,
+      })
+    // La campana y la voz se pisan si salen juntas; dejamos que suene primero.
+    if (delayMs > 0) voiceTimers.current.push(window.setTimeout(fire, delayMs))
+    else fire()
+  }
+
   /** Segmento que contiene ese instante, y cuánto lleva dentro de él. */
   function locate(elapsed: number) {
     const s = sessionRef.current!
@@ -89,6 +108,9 @@ export default function MindfulnessSession() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     rafRef.current = 0
 
+    for (const t of voiceTimers.current) window.clearTimeout(t)
+    voiceTimers.current = []
+    cancelVoice()
     if (settingsRef.current.bells) bell(0.6, 396)
     stopAmbient(3)
     void releaseWakeLock()
@@ -127,6 +149,7 @@ export default function MindfulnessSession() {
       setSegmentIndex(index)
       setCueText(null)
       if (settingsRef.current.bells) bell(0.45)
+      say(segment.guidance, settingsRef.current.bells ? 1400 : 200)
     }
 
     if (segment.cues) {
@@ -135,6 +158,7 @@ export default function MindfulnessSession() {
       if (active !== cueIndexRef.current) {
         cueIndexRef.current = active
         setCueText(active >= 0 ? segment.cues[active].text : null)
+        if (active >= 0) say(segment.cues[active].text)
       }
     }
 
@@ -173,6 +197,8 @@ export default function MindfulnessSession() {
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      for (const t of voiceTimers.current) window.clearTimeout(t)
+      cancelVoice()
       stopAmbient(0.3)
       void releaseWakeLock()
       closeAudio()
@@ -191,6 +217,10 @@ export default function MindfulnessSession() {
     shownSecondRef.current = -1
     finishedRef.current = false
     setSegmentIndex(0)
+    // Esta primera frase sale del toque en "Empezar": es el gesto que desbloquea
+    // el habla para el resto de la sesión.
+    const first = sessionRef.current?.segments[0]
+    if (first) say(first.guidance, settings.bells ? 1400 : 300)
     setStage('running')
   }
 
@@ -204,6 +234,7 @@ export default function MindfulnessSession() {
     } else {
       pauseStartedRef.current = performance.now()
       setPaused(true)
+      cancelVoice()
       stopAmbient(1)
       void releaseWakeLock()
     }
