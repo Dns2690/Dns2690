@@ -1,5 +1,5 @@
 import { toDateKey, todayKey } from './kegel'
-import { listKegelSessions, listSessions } from './store'
+import { listKegelSessions, listMindfulnessLogs, listSessions } from './store'
 
 /**
  * Actividad unificada de todos los módulos.
@@ -25,7 +25,11 @@ function bump(map: ActivityByDate, date: string, key: keyof DayActivity): void {
 }
 
 export async function loadActivity(): Promise<ActivityByDate> {
-  const [workouts, kegels] = await Promise.all([listSessions(), listKegelSessions()])
+  const [workouts, kegels, minds] = await Promise.all([
+    listSessions(),
+    listKegelSessions(),
+    listMindfulnessLogs(),
+  ])
   const map: ActivityByDate = {}
 
   for (const s of workouts) {
@@ -35,6 +39,7 @@ export async function loadActivity(): Promise<ActivityByDate> {
     bump(map, toDateKey(new Date(s.finishedAt)), 'workout')
   }
   for (const k of kegels) bump(map, k.date, 'kegel')
+  for (const m of minds) bump(map, m.date, 'mindfulness')
 
   return map
 }

@@ -101,6 +101,7 @@ export default function Home() {
   const todayActivity = activity[today]
   const kegelToday = todayActivity?.kegel ?? 0
   const workoutToday = todayActivity?.workout ?? 0
+  const mindToday = todayActivity?.mindfulness ?? 0
 
   const cards: ModuleCard[] = [
     {
@@ -129,8 +130,8 @@ export default function Home() {
       to: '/mindfulness',
       icon: '🧘',
       title: 'Mindfulness',
-      status: 'Próximamente',
-      done: false,
+      status: mindToday ? `${mindToday} ${mindToday === 1 ? 'sesión' : 'sesiones'} hoy` : 'Todavía no meditaste',
+      done: mindToday > 0,
       accent: MODULE_THEMES.mindfulness.textHex,
     },
   ]
@@ -218,7 +219,7 @@ export default function Home() {
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
             <p className="text-lg font-bold text-gray-100">Tu constancia</p>
-            {streak > 0 && <p className="text-base font-medium text-gray-200">🔥 {streak} días</p>}
+            {streak > 0 && <p className="text-base font-medium text-gray-200">🔥 {streak} {streak === 1 ? 'día' : 'días'}</p>}
           </div>
           <p className="mt-1 text-base text-gray-500">
             Un día cuenta si hiciste algo en cualquier módulo.

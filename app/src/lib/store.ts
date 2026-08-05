@@ -1,6 +1,8 @@
 import { createStore, get, set, del, keys } from 'idb-keyval'
 import type {
   KegelSession,
+  MindfulnessLog,
+  MindfulnessSettings,
   KegelSettings,
   KegelTest,
   MeasurementEntry,
@@ -17,6 +19,8 @@ const MEASUREMENT_PREFIX = 'measurement:'
 const KEGEL_SESSION_PREFIX = 'kegelsession:'
 const KEGEL_TEST_PREFIX = 'kegeltest:'
 const KEGEL_SETTINGS_KEY = 'kegelsettings'
+const MIND_LOG_PREFIX = 'mindlog:'
+const MIND_SETTINGS_KEY = 'mindsettings'
 const PROFILE_KEY = 'profile'
 
 function uid(): string {
@@ -149,6 +153,30 @@ export async function getKegelSettings(): Promise<KegelSettings | undefined> {
 
 export async function saveKegelSettings(settings: KegelSettings): Promise<void> {
   await set(KEGEL_SETTINGS_KEY, settings, store)
+}
+
+export async function listMindfulnessLogs(): Promise<MindfulnessLog[]> {
+  const allKeys = (await keys(store)) as string[]
+  const logs = await Promise.all(
+    allKeys.filter((k) => k.startsWith(MIND_LOG_PREFIX)).map((k) => get<MindfulnessLog>(k, store)),
+  )
+  return logs
+    .filter((l): l is MindfulnessLog => !!l)
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+}
+
+export async function saveMindfulnessLog(log: Omit<MindfulnessLog, 'id'>): Promise<MindfulnessLog> {
+  const full: MindfulnessLog = { ...log, id: uid() }
+  await set(MIND_LOG_PREFIX + full.id, full, store)
+  return full
+}
+
+export async function getMindfulnessSettings(): Promise<MindfulnessSettings | undefined> {
+  return get<MindfulnessSettings>(MIND_SETTINGS_KEY, store)
+}
+
+export async function saveMindfulnessSettings(settings: MindfulnessSettings): Promise<void> {
+  await set(MIND_SETTINGS_KEY, settings, store)
 }
 
 export async function getProfile(): Promise<Profile | undefined> {

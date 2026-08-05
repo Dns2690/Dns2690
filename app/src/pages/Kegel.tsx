@@ -116,7 +116,7 @@ export default function Kegel() {
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
             <p className="text-sm text-gray-500">Hoy · nivel {level.label}</p>
-            {streak > 0 && <p className="text-sm text-rose-400">🔥 {streak} días</p>}
+            {streak > 0 && <p className="text-sm text-rose-400">🔥 {streak} {streak === 1 ? 'día' : 'días'}</p>}
           </div>
           <p className="mt-1 text-2xl font-bold text-gray-100">
             {todayCount}

@@ -15,9 +15,9 @@ export default defineConfig({
       manifest: {
         name: 'Soma',
         short_name: 'Soma',
-        description: 'Soma — buscador de ejercicios y registro de entrenamientos, uso personal.',
-        theme_color: '#111827',
-        background_color: '#111827',
+        description: 'Soma — ejercicios, Kegel y mindfulness. Uso personal.',
+        theme_color: '#0b0d12',
+        background_color: '#0b0d12',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',

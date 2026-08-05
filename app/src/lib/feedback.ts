@@ -51,6 +51,11 @@ export function unlockAudio(): void {
   source.start(0)
 }
 
+/** El contexto ya desbloqueado, para que otros módulos cuelguen sus nodos. */
+export function getAudioContext(): AudioContext | null {
+  return ctx
+}
+
 export function closeAudio(): void {
   if (!ctx) return
   void ctx.close()

@@ -27,16 +27,19 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
  * decoración: confundir un Reverse Kegel con uno normal invierte el efecto del
  * ejercicio, así que la diferencia tiene que verse de un vistazo.
  */
-const MODE_GRADIENT: Record<'contract' | 'lengthen', string> = {
+const MODE_GRADIENT: Record<'contract' | 'lengthen' | 'breath', string> = {
   contract:
     'radial-gradient(circle, rgba(251,113,133,0.95) 0%, rgba(244,63,94,0.85) 42%, rgba(190,18,60,0.45) 66%, rgba(244,63,94,0) 78%)',
   lengthen:
     'radial-gradient(circle, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.85) 42%, rgba(124,58,237,0.45) 66%, rgba(167,139,250,0) 78%)',
+  // Mindfulness comparte el violeta: en toda la app significa aflojar.
+  breath:
+    'radial-gradient(circle, rgba(167,139,250,0.9) 0%, rgba(139,92,246,0.72) 44%, rgba(109,40,217,0.38) 68%, rgba(139,92,246,0) 80%)',
 }
 
 const KegelGuide = forwardRef<
   KegelGuideHandle,
-  { children: ReactNode; mode?: 'contract' | 'lengthen' }
+  { children: ReactNode; mode?: 'contract' | 'lengthen' | 'breath' }
 >(function KegelGuide({ children, mode = 'contract' }, ref) {
   const discRef = useRef<HTMLDivElement>(null)
   const arcRef = useRef<SVGCircleElement>(null)

@@ -5,6 +5,7 @@ import Splash from './components/Splash'
 import Home from './pages/Home'
 import FitnessHub from './pages/FitnessHub'
 import Mindfulness from './pages/Mindfulness'
+import MindfulnessSession from './pages/MindfulnessSession'
 import Exercises from './pages/Exercises'
 import ExerciseDetail from './pages/ExerciseDetail'
 import Routines from './pages/Routines'
@@ -27,7 +28,7 @@ import Profile from './pages/Profile'
 
 // Las sesiones guiadas van a pantalla completa: el menú distrae del ritmo y
 // facilita salirse de la rutina sin querer.
-const IMMERSIVE_ROUTES = ['/kegel/rutina', '/kegel/test']
+const IMMERSIVE_ROUTES = ['/kegel/rutina', '/kegel/test', '/mindfulness/sesion']
 
 function Shell() {
   const { pathname } = useLocation()
@@ -41,6 +42,7 @@ function Shell() {
           <Route path="/ejercicios" element={<FitnessHub />} />
           <Route path="/ejercicios/biblioteca" element={<Exercises />} />
           <Route path="/mindfulness" element={<Mindfulness />} />
+          <Route path="/mindfulness/sesion" element={<MindfulnessSession />} />
           <Route path="/ejercicio/:id" element={<ExerciseDetail />} />
           <Route path="/programas" element={<ProgramsList />} />
           <Route path="/programas/:programId" element={<Program />} />

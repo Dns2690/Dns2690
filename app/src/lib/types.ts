@@ -200,6 +200,44 @@ export interface KegelSettings {
   levelUpDismissedAt?: string
 }
 
+export type MindfulnessLevelId = 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+
+export interface MindfulnessSegment {
+  kind: 'settle' | 'breath' | 'scan' | 'open' | 'metta' | 'close'
+  seconds: number
+  title: string
+  guidance: string
+  /** Si está, el segmento muestra el marcador de respiración. */
+  breathId?: string
+  /** Indicaciones que van rotando dentro del segmento. */
+  cues?: { at: number; text: string }[]
+}
+
+export interface MindfulnessSession {
+  levelId: MindfulnessLevelId
+  breathId: string
+  totalSeconds: number
+  segments: MindfulnessSegment[]
+}
+
+export interface MindfulnessLog {
+  id: string
+  date: string
+  completedAt: string
+  levelId: MindfulnessLevelId
+  /** Minutos efectivamente meditados, que pueden ser menos si cortó antes. */
+  minutes: number
+  ambient: string
+}
+
+export interface MindfulnessSettings {
+  levelId: MindfulnessLevelId
+  breathId: string
+  ambient: string
+  ambientVolume: number
+  bells: boolean
+}
+
 export interface Profile {
   name: string
   avatar: string
