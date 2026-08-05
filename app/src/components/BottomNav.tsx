@@ -6,7 +6,7 @@ const items = [
   { to: '/rutinas', label: 'Rutinas', icon: '📋', end: false },
   { to: '/entrenar', label: 'Entrenar', icon: '⏱️', end: false },
   { to: '/historial', label: 'Historial', icon: '📈', end: false },
-  { to: '/medidas', label: 'Medidas', icon: '📏', end: false },
+  { to: '/kegel', label: 'Kegel', icon: '🌊', end: false },
 ]
 
 export default function BottomNav() {

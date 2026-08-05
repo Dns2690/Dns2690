@@ -23,9 +23,9 @@ export default function Exercises() {
         title="Ejercicios"
         right={
           <Link
-            to="/perfil"
+            to="/ajustes"
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-lg text-gray-300 active:bg-white/10"
-            aria-label="Perfil y ajustes"
+            aria-label="Ajustes"
           >
             ⚙️
           </Link>

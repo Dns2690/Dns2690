@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 import Splash from './components/Splash'
 import Exercises from './pages/Exercises'
@@ -16,9 +16,20 @@ import ProgramsList from './pages/ProgramsList'
 import Measurements from './pages/Measurements'
 import MeasurementForm from './pages/MeasurementForm'
 import MeasurementTrend from './pages/MeasurementTrend'
+import Kegel from './pages/Kegel'
+import KegelSession from './pages/KegelSession'
+import KegelTest from './pages/KegelTest'
+import KegelTrend from './pages/KegelTrend'
 import Profile from './pages/Profile'
 
+// Las sesiones guiadas van a pantalla completa: el menú distrae del ritmo y
+// facilita salirse de la rutina sin querer.
+const IMMERSIVE_ROUTES = ['/kegel/rutina', '/kegel/test']
+
 function Shell() {
+  const { pathname } = useLocation()
+  const immersive = IMMERSIVE_ROUTES.includes(pathname)
+
   return (
     <>
       <main className="flex flex-1 flex-col">
@@ -39,10 +50,15 @@ function Shell() {
           <Route path="/medidas/nueva" element={<MeasurementForm />} />
           <Route path="/medidas/grafico/:key" element={<MeasurementTrend />} />
           <Route path="/medidas/:id" element={<MeasurementForm />} />
+          <Route path="/kegel" element={<Kegel />} />
+          <Route path="/kegel/rutina" element={<KegelSession />} />
+          <Route path="/kegel/test" element={<KegelTest />} />
+          <Route path="/kegel/progreso" element={<KegelTrend />} />
+          <Route path="/ajustes" element={<Profile />} />
           <Route path="/perfil" element={<Profile />} />
         </Routes>
       </main>
-      <BottomNav />
+      {!immersive && <BottomNav />}
     </>
   )
 }

@@ -122,6 +122,73 @@ export interface MeasurementEntry {
 
 export type Sex = 'male' | 'female'
 
+export type KegelLevelId = 'beginner' | 'medium' | 'advanced'
+
+export type KegelPhase = 'contract' | 'hold' | 'release' | 'rest'
+
+export interface KegelStep {
+  phase: KegelPhase
+  seconds: number
+  /** Intensidad de contracción al empezar el paso, 0–1. */
+  from: number
+  /** Intensidad al terminarlo, 0–1. */
+  to: number
+  /** Etiqueta propia del paso, para los escalones de Gearbox. */
+  label?: string
+}
+
+export interface KegelExercise {
+  id: string
+  name: string
+  icon: string
+  description: string
+  minLevel: KegelLevelId
+  pattern: KegelStep[]
+}
+
+export interface KegelLevel {
+  id: KegelLevelId
+  label: string
+  workSeconds: number
+  restSeconds: number
+  rank: number
+}
+
+export interface KegelTimelineEntry {
+  kind: 'exercise' | 'interRest'
+  exerciseId: string
+  exerciseIndex: number
+  repIndex: number
+  totalReps: number
+  step: KegelStep
+  startMs: number
+  endMs: number
+}
+
+export interface KegelSession {
+  id: string
+  /** Fecha local YYYY-MM-DD, para agrupar por día. */
+  date: string
+  completedAt: string
+  levelId: KegelLevelId
+  exerciseIds: string[]
+  durationSeconds: number
+}
+
+export interface KegelTest {
+  id: string
+  date: string
+  seconds: number
+}
+
+export interface KegelSettings {
+  levelId: KegelLevelId
+  sound: boolean
+  vibration: boolean
+  /** Fecha en que rechazó la sugerencia de subir de nivel, para no insistir. */
+  levelUpDismissedAt?: string
+}
+
 export interface Profile {
   name: string
   avatar: string

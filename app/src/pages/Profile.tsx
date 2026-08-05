@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
-import { getProfile, saveProfile } from '../lib/store'
+import { getKegelSettings, getProfile, saveKegelSettings, saveProfile } from '../lib/store'
 import { AVATARS } from '../lib/profile'
 import { clearAllData, exportBackup, importBackup } from '../lib/backup'
-import type { Profile as ProfileType, Sex } from '../lib/types'
+import { KEGEL_LEVELS } from '../lib/kegel'
+import { supportsVibration } from '../lib/feedback'
+import type { KegelLevelId, KegelSettings, Profile as ProfileType, Sex } from '../lib/types'
+
+const DEFAULT_KEGEL: KegelSettings = { levelId: 'beginner', sound: true, vibration: true }
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileType | null>(null)
@@ -11,12 +16,15 @@ export default function Profile() {
   const [avatar, setAvatar] = useState(AVATARS[0])
   const [heightCm, setHeightCm] = useState('')
   const [sex, setSex] = useState<Sex | ''>('')
+  const [kegel, setKegel] = useState<KegelSettings>(DEFAULT_KEGEL)
   const [loaded, setLoaded] = useState(false)
   const [status, setStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const canVibrate = supportsVibration()
+
   useEffect(() => {
-    getProfile().then((p) => {
+    Promise.all([getProfile(), getKegelSettings()]).then(([p, k]) => {
       if (p) {
         setProfile(p)
         setName(p.name)
@@ -24,6 +32,7 @@ export default function Profile() {
         setHeightCm(p.heightCm ? String(p.heightCm) : '')
         setSex(p.sex ?? '')
       }
+      if (k) setKegel(k)
       setLoaded(true)
     })
   }, [])
@@ -42,6 +51,12 @@ export default function Profile() {
     setStatus('Perfil guardado.')
   }
 
+  async function updateKegel(patch: Partial<KegelSettings>) {
+    const next = { ...kegel, ...patch }
+    setKegel(next)
+    await saveKegelSettings(next)
+  }
+
   async function handleExport() {
     const backup = await exportBackup()
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
@@ -50,7 +65,7 @@ export default function Profile() {
     const date = new Date().toISOString().slice(0, 10)
     const who = profile?.name ? profile.name.toLowerCase().replace(/\s+/g, '-') : 'backup'
     a.href = url
-    a.download = `mis-ejercicios-${who}-${date}.json`
+    a.download = `workoutos-${who}-${date}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -71,7 +86,7 @@ export default function Profile() {
   }
 
   async function handleReset() {
-    if (!confirm('¿Borrar TODOS los datos de esta app en este dispositivo? Rutinas, entrenamientos, mediciones y perfil. No se puede deshacer salvo que tengas un backup exportado.')) return
+    if (!confirm('¿Borrar TODOS los datos de esta app en este dispositivo? Rutinas, entrenamientos, mediciones, Kegel y perfil. No se puede deshacer salvo que tengas un backup exportado.')) return
     await clearAllData()
     window.location.reload()
   }
@@ -79,7 +94,7 @@ export default function Profile() {
   if (!loaded) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Perfil" back />
+        <TopBar title="Ajustes" back />
         <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
       </div>
     )
@@ -87,9 +102,73 @@ export default function Profile() {
 
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <TopBar title="Perfil" back />
+      <TopBar title="Ajustes" back />
 
       <div className="flex flex-col gap-4 p-4">
+        <Link
+          to="/medidas"
+          className="flex items-center gap-3 rounded-2xl bg-white/5 p-4 active:bg-white/10"
+        >
+          <span className="text-2xl">📏</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-100">Medidas</p>
+            <p className="text-xs text-gray-500">Peso, glúteos, cintura, % de grasa y tendencias</p>
+          </div>
+          <span className="text-gray-600">›</span>
+        </Link>
+
+        <div className="rounded-2xl bg-white/5 p-4">
+          <p className="mb-1 text-sm font-medium text-gray-100">🌊 Kegel</p>
+          <p className="mb-3 text-xs text-gray-500">
+            Tu nivel define cuánto dura cada ejercicio y cuáles entran en la rotación.
+          </p>
+          <div className="mb-4 flex gap-2">
+            {KEGEL_LEVELS.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => updateKegel({ levelId: l.id as KegelLevelId, levelUpDismissedAt: undefined })}
+                className={`flex-1 rounded-lg py-2 text-xs font-medium ${
+                  kegel.levelId === l.id
+                    ? 'bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400'
+                    : 'bg-white/5 text-gray-400'
+                }`}
+              >
+                {l.label}
+                <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
+                  {l.workSeconds}s / {l.restSeconds}s
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <label className="flex items-center justify-between py-2">
+            <span className="text-sm text-gray-200">🔊 Señales de sonido</span>
+            <input
+              type="checkbox"
+              checked={kegel.sound}
+              onChange={(e) => updateKegel({ sound: e.target.checked })}
+              className="h-5 w-5 accent-cyan-400"
+            />
+          </label>
+
+          <label className="flex items-center justify-between py-2">
+            <span className="text-sm text-gray-200">📳 Vibración</span>
+            <input
+              type="checkbox"
+              checked={kegel.vibration}
+              disabled={!canVibrate}
+              onChange={(e) => updateKegel({ vibration: e.target.checked })}
+              className="h-5 w-5 accent-cyan-400 disabled:opacity-30"
+            />
+          </label>
+          {!canVibrate && (
+            <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
+              Tu navegador no expone vibración. En iPhone Safari nunca la implementó, así que el ritmo se marca con
+              sonido — funciona incluso con el switch de silencio activado.
+            </p>
+          )}
+        </div>
+
         <div className="rounded-2xl bg-white/5 p-4">
           <p className="mb-2 text-sm font-medium text-gray-100">Tu perfil</p>
           <div className="mb-3 flex flex-wrap gap-2">

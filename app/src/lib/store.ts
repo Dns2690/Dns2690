@@ -1,11 +1,22 @@
 import { createStore, get, set, del, keys } from 'idb-keyval'
-import type { MeasurementEntry, Profile, Routine, WorkoutSession } from './types'
+import type {
+  KegelSession,
+  KegelSettings,
+  KegelTest,
+  MeasurementEntry,
+  Profile,
+  Routine,
+  WorkoutSession,
+} from './types'
 
 export const store = createStore('mis-ejercicios', 'data')
 
 const ROUTINE_PREFIX = 'routine:'
 const SESSION_PREFIX = 'session:'
 const MEASUREMENT_PREFIX = 'measurement:'
+const KEGEL_SESSION_PREFIX = 'kegelsession:'
+const KEGEL_TEST_PREFIX = 'kegeltest:'
+const KEGEL_SETTINGS_KEY = 'kegelsettings'
 const PROFILE_KEY = 'profile'
 
 function uid(): string {
@@ -96,6 +107,48 @@ export async function saveMeasurement(
 
 export async function deleteMeasurement(id: string): Promise<void> {
   await del(MEASUREMENT_PREFIX + id, store)
+}
+
+export async function listKegelSessions(): Promise<KegelSession[]> {
+  const allKeys = (await keys(store)) as string[]
+  const sessions = await Promise.all(
+    allKeys.filter((k) => k.startsWith(KEGEL_SESSION_PREFIX)).map((k) => get<KegelSession>(k, store)),
+  )
+  return sessions
+    .filter((s): s is KegelSession => !!s)
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+}
+
+export async function saveKegelSession(session: Omit<KegelSession, 'id'>): Promise<KegelSession> {
+  const full: KegelSession = { ...session, id: uid() }
+  await set(KEGEL_SESSION_PREFIX + full.id, full, store)
+  return full
+}
+
+export async function listKegelTests(): Promise<KegelTest[]> {
+  const allKeys = (await keys(store)) as string[]
+  const tests = await Promise.all(
+    allKeys.filter((k) => k.startsWith(KEGEL_TEST_PREFIX)).map((k) => get<KegelTest>(k, store)),
+  )
+  return tests.filter((t): t is KegelTest => !!t).sort((a, b) => b.date.localeCompare(a.date))
+}
+
+export async function saveKegelTest(test: Omit<KegelTest, 'id'>): Promise<KegelTest> {
+  const full: KegelTest = { ...test, id: uid() }
+  await set(KEGEL_TEST_PREFIX + full.id, full, store)
+  return full
+}
+
+export async function deleteKegelTest(id: string): Promise<void> {
+  await del(KEGEL_TEST_PREFIX + id, store)
+}
+
+export async function getKegelSettings(): Promise<KegelSettings | undefined> {
+  return get<KegelSettings>(KEGEL_SETTINGS_KEY, store)
+}
+
+export async function saveKegelSettings(settings: KegelSettings): Promise<void> {
+  await set(KEGEL_SETTINGS_KEY, settings, store)
 }
 
 export async function getProfile(): Promise<Profile | undefined> {
