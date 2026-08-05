@@ -29,7 +29,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
  */
 const MODE_GRADIENT: Record<'contract' | 'lengthen', string> = {
   contract:
-    'radial-gradient(circle, rgba(34,211,238,0.95) 0%, rgba(34,211,238,0.85) 42%, rgba(14,165,190,0.45) 66%, rgba(34,211,238,0) 78%)',
+    'radial-gradient(circle, rgba(251,113,133,0.95) 0%, rgba(244,63,94,0.85) 42%, rgba(190,18,60,0.45) 66%, rgba(244,63,94,0) 78%)',
   lengthen:
     'radial-gradient(circle, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.85) 42%, rgba(124,58,237,0.45) 66%, rgba(167,139,250,0) 78%)',
 }

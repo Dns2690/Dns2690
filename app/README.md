@@ -1,4 +1,4 @@
-# WorkoutOS
+# Soma
 
 PWA personal (uso individual, no comercial) para explorar ejercicios de gimnasio, armar
 rutinas propias, seguir programas guiados de 1 año, registrar entrenamientos (peso,

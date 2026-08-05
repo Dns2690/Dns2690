@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'WorkoutOS',
-        short_name: 'WorkoutOS',
-        description: 'WorkoutOS — buscador de ejercicios y registro de entrenamientos, uso personal.',
+        name: 'Soma',
+        short_name: 'Soma',
+        description: 'Soma — buscador de ejercicios y registro de entrenamientos, uso personal.',
         theme_color: '#111827',
         background_color: '#111827',
         display: 'standalone',

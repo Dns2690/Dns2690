@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import TrendChart from '../components/TrendChart'
 import CompareBars from '../components/CompareBars'
+import { MODULE_THEMES } from '../lib/theme'
 import { deleteKegelTest, listKegelTests } from '../lib/store'
 import type { KegelTest } from '../lib/types'
 
@@ -50,6 +51,7 @@ export default function KegelTrend() {
               unit="s"
               previousLabel="Test anterior"
               currentLabel="Último test"
+              accent={MODULE_THEMES.kegel.textHex}
             />
           </div>
         )}
@@ -60,13 +62,13 @@ export default function KegelTrend() {
               <p className="text-sm text-gray-500">Todavía no hiciste ningún test.</p>
               <Link
                 to="/kegel/test"
-                className="mt-4 inline-block rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-[#0b0d12] active:bg-cyan-400"
+                className="mt-4 inline-block rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-[#0b0d12] active:bg-rose-400"
               >
                 Hacer el primero
               </Link>
             </div>
           ) : (
-            <TrendChart series={series} unit="s" />
+            <TrendChart series={series} unit="s" accent={MODULE_THEMES.kegel.textHex} />
           )}
         </div>
 

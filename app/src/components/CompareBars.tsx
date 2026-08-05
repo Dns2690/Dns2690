@@ -12,12 +12,15 @@ export default function CompareBars({
   unit,
   previousLabel = 'Antes',
   currentLabel = 'Ahora',
+  accent = '#22d3ee',
 }: {
   previous: number
   current: number
   unit: string
   previousLabel?: string
   currentLabel?: string
+  /** Color del módulo dueño del gráfico. */
+  accent?: string
 }) {
   const max = Math.max(previous, current, 1)
   const MIN_HEIGHT = 12
@@ -30,7 +33,7 @@ export default function CompareBars({
   return (
     <div className="rounded-2xl bg-white/5 p-4">
       {change != null && (
-        <p className={`text-xl font-bold ${improved ? 'text-cyan-400' : 'text-amber-400'}`}>
+        <p className="text-xl font-bold" style={{ color: improved ? accent : '#fbbf24' }}>
           {improved ? 'Subió' : 'Bajó'} {change > 0 ? '+' : ''}
           {change}%
         </p>
@@ -63,7 +66,7 @@ export default function CompareBars({
               className="w-full rounded-t-lg"
               style={{
                 height: `${currHeight}%`,
-                background: 'linear-gradient(to bottom, #67e8f9, #06b6d4)',
+                background: `linear-gradient(to bottom, ${accent}, ${accent}bb)`,
               }}
               role="img"
               aria-label={`${currentLabel}: ${current} ${unit}`}

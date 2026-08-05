@@ -116,7 +116,7 @@ export default function Kegel() {
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
             <p className="text-sm text-gray-500">Hoy · nivel {level.label}</p>
-            {streak > 0 && <p className="text-sm text-cyan-400">🔥 {streak} días</p>}
+            {streak > 0 && <p className="text-sm text-rose-400">🔥 {streak} días</p>}
           </div>
           <p className="mt-1 text-2xl font-bold text-gray-100">
             {todayCount}
@@ -126,7 +126,7 @@ export default function Kegel() {
             {Array.from({ length: DAILY_ROUTINE_GOAL }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 flex-1 rounded-full ${i < todayCount ? 'bg-cyan-400' : 'bg-white/10'}`}
+                className={`h-1.5 flex-1 rounded-full ${i < todayCount ? 'bg-rose-400' : 'bg-white/10'}`}
               />
             ))}
           </div>
@@ -134,14 +134,14 @@ export default function Kegel() {
 
         <button
           onClick={() => navigate('/kegel/rutina')}
-          className="rounded-lg bg-cyan-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-cyan-400"
+          className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
         >
           Iniciar rutina
         </button>
 
         {suggestedLevel && (
-          <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4">
-            <p className="text-sm font-medium text-cyan-300">🚀 Venís cumpliendo la meta</p>
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
+            <p className="text-sm font-medium text-rose-300">🚀 Venís cumpliendo la meta</p>
             <p className="mt-1 text-sm text-gray-400">
               Cumpliste tu objetivo la mayoría de los últimos {LEVEL_UP_WINDOW_DAYS} días. ¿Subimos a{' '}
               {getLevel(suggestedLevel).label}?
@@ -149,7 +149,7 @@ export default function Kegel() {
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => applyLevelUp(true)}
-                className="flex-1 rounded-lg bg-cyan-500 py-2 text-sm font-medium text-[#0b0d12] active:bg-cyan-400"
+                className="flex-1 rounded-lg bg-rose-500 py-2 text-sm font-medium text-[#0b0d12] active:bg-rose-400"
               >
                 Subir
               </button>
@@ -195,15 +195,15 @@ export default function Kegel() {
               const day = Number(key.slice(8))
               const fill =
                 count >= DAILY_ROUTINE_GOAL
-                  ? 'bg-cyan-400 text-[#0b0d12] font-semibold'
+                  ? 'bg-rose-400 text-[#0b0d12] font-semibold'
                   : count > 0
-                    ? 'bg-cyan-400/30 text-gray-100'
+                    ? 'bg-rose-400/30 text-gray-100'
                     : 'bg-white/5 text-gray-600'
               return (
                 <span
                   key={key}
                   className={`flex aspect-square items-center justify-center rounded-md text-sm ${fill} ${
-                    isToday ? 'ring-1 ring-cyan-400' : ''
+                    isToday ? 'ring-1 ring-rose-400' : ''
                   }`}
                 >
                   {day}

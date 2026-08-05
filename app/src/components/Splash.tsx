@@ -31,8 +31,10 @@ export default function Splash({ onDone }: { onDone: () => void }) {
         className="relative opacity-0"
         style={{ animation: 'splash-pop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards' }}
       >
-        <p className="bg-gradient-to-r from-cyan-300 to-cyan-500 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent">
-          WorkoutOS
+        {/* El degradado recorre los tres colores de módulo: el nombre
+            representa el conjunto, no una de sus partes. */}
+        <p className="bg-gradient-to-r from-cyan-400 via-rose-400 to-violet-400 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent">
+          Soma
         </p>
       </div>
 

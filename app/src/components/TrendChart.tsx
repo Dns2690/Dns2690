@@ -9,7 +9,16 @@ function formatDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' })
 }
 
-export default function TrendChart({ series, unit }: { series: Point[]; unit: string }) {
+export default function TrendChart({
+  series,
+  unit,
+  accent = '#22d3ee',
+}: {
+  series: Point[]
+  unit: string
+  /** Color del módulo dueño del gráfico. Por defecto el cyan de Medidas. */
+  accent?: string
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(series.length - 1)
 
@@ -85,11 +94,11 @@ export default function TrendChart({ series, unit }: { series: Point[]; unit: st
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
           />
-          <polygon points={areaPoints} fill="#22d3ee" fillOpacity={0.1} stroke="none" />
+          <polygon points={areaPoints} fill={accent} fillOpacity={0.1} stroke="none" />
           <polyline
             points={linePoints}
             fill="none"
-            stroke="#22d3ee"
+            stroke={accent}
             strokeWidth={2}
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -100,9 +109,14 @@ export default function TrendChart({ series, unit }: { series: Point[]; unit: st
           <span
             key={i}
             className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${
-              i === activeIndex ? 'h-3 w-3 bg-cyan-400 ring-2 ring-[#0b0d12]' : 'h-1.5 w-1.5 bg-cyan-400/50'
+              i === activeIndex ? 'h-3 w-3 ring-2 ring-[#0b0d12]' : 'h-1.5 w-1.5'
             }`}
-            style={{ left: `${(p.x / W) * 100}%`, top: `${(p.y / H) * 100}%` }}
+            style={{
+              left: `${(p.x / W) * 100}%`,
+              top: `${(p.y / H) * 100}%`,
+              background: accent,
+              opacity: i === activeIndex ? 1 : 0.5,
+            }}
           />
         ))}
       </div>

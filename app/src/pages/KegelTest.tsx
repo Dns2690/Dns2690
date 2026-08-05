@@ -150,7 +150,7 @@ export default function KegelTest() {
 
           <button
             onClick={begin}
-            className="rounded-lg bg-cyan-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-cyan-400"
+            className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
           >
             Empezar test
           </button>
@@ -163,7 +163,7 @@ export default function KegelTest() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
         <p className="text-sm text-gray-400">Preparate…</p>
-        <p className="text-7xl font-bold text-cyan-400">{prepCount}</p>
+        <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
       </div>
     )
   }
@@ -178,7 +178,7 @@ export default function KegelTest() {
           <span className="ml-1 text-lg font-normal text-gray-500">s</span>
         </p>
         {delta != null && delta !== 0 && (
-          <p className={`text-sm ${delta > 0 ? 'text-cyan-400' : 'text-amber-400'}`}>
+          <p className={`text-sm ${delta > 0 ? 'text-rose-400' : 'text-amber-400'}`}>
             {delta > 0 ? '+' : ''}
             {delta}s respecto al test anterior
           </p>
@@ -187,7 +187,7 @@ export default function KegelTest() {
         <div className="mt-4 flex w-full flex-col gap-2">
           <button
             onClick={() => navigate('/kegel/progreso')}
-            className="w-full rounded-lg bg-cyan-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-cyan-400"
+            className="w-full rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
           >
             Ver mi progreso
           </button>
@@ -211,7 +211,7 @@ export default function KegelTest() {
       <div className="flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef}>
           <p className="text-5xl font-bold tabular-nums text-gray-100">{elapsed.toFixed(1)}</p>
-          <p className="mt-1 text-sm font-medium text-cyan-400">segundos</p>
+          <p className="mt-1 text-sm font-medium text-rose-400">segundos</p>
         </KegelGuide>
       </div>
 

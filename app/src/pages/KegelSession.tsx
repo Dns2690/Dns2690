@@ -358,7 +358,7 @@ export default function KegelSession() {
 
           <button
             onClick={beginCountdown}
-            className="rounded-lg bg-cyan-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-cyan-400"
+            className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
           >
             {restWarning ? 'Entrenar igual' : 'Empezar'}
           </button>
@@ -371,7 +371,7 @@ export default function KegelSession() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
         <p className="text-sm text-gray-400">Preparate…</p>
-        <p className="text-7xl font-bold text-cyan-400">{prepCount}</p>
+        <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
       </div>
     )
   }
@@ -387,7 +387,7 @@ export default function KegelSession() {
         </p>
         <button
           onClick={() => navigate('/kegel')}
-          className="mt-4 w-full rounded-lg bg-cyan-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-cyan-400"
+          className="mt-4 w-full rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
         >
           Listo
         </button>
@@ -419,7 +419,7 @@ export default function KegelSession() {
             >
               <span className="text-xl font-bold text-gray-100">{currentExercise?.name ?? ''}</span>
               <span
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-cyan-400"
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-rose-400"
                 aria-hidden="true"
               >
                 i
@@ -462,7 +462,7 @@ export default function KegelSession() {
 
             <button
               onClick={closeInfo}
-              className="mt-5 w-full rounded-xl bg-cyan-500 py-4 text-lg font-semibold text-[#0b0d12] active:bg-cyan-400"
+              className="mt-5 w-full rounded-xl bg-rose-500 py-4 text-lg font-semibold text-[#0b0d12] active:bg-rose-400"
             >
               Seguir
             </button>

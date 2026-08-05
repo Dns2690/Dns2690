@@ -13,6 +13,7 @@ import { DAILY_ROUTINE_GOAL, getLevel, todayKey } from '../lib/kegel'
 import { getKegelSettings, getProfile, listSessions } from '../lib/store'
 import { PROGRAMS } from '../data/programs'
 import { computeProgress } from '../lib/program'
+import { MODULE_THEMES } from '../lib/theme'
 import type { KegelSettings, Profile, WorkoutSession } from '../lib/types'
 
 function greeting(): string {
@@ -112,7 +113,7 @@ export default function Home() {
           ? `${activeProgram.name} · mes ${activeProgram.month}, día ${activeProgram.day}`
           : 'Elegí un programa o rutina',
       done: workoutToday > 0,
-      accent: 'text-cyan-400',
+      accent: MODULE_THEMES.fitness.textHex,
     },
     {
       to: '/kegel',
@@ -122,7 +123,7 @@ export default function Home() {
         kegel ? ` · ${getLevel(kegel.levelId).label}` : ''
       }`,
       done: kegelToday >= DAILY_ROUTINE_GOAL,
-      accent: 'text-cyan-400',
+      accent: MODULE_THEMES.kegel.textHex,
     },
     {
       to: '/mindfulness',
@@ -130,15 +131,33 @@ export default function Home() {
       title: 'Mindfulness',
       status: 'Próximamente',
       done: false,
-      accent: 'text-violet-400',
+      accent: MODULE_THEMES.mindfulness.textHex,
     },
   ]
 
+  // El botón toma el color del módulo al que lleva, así el destino se anticipa
+  // antes de leerlo.
   const nextAction = kegelToday < DAILY_ROUTINE_GOAL
-    ? { to: '/kegel/rutina', label: 'Empezar rutina Kegel' }
+    ? { to: '/kegel/rutina', label: 'Empezar rutina Kegel', accent: MODULE_THEMES.kegel.hex }
     : activeProgram
-      ? { to: '/programas', label: 'Seguir tu programa' }
-      : { to: '/entrenar', label: 'Entrenar' }
+      ? { to: '/programas', label: 'Seguir tu programa', accent: MODULE_THEMES.fitness.hex }
+      : { to: '/entrenar', label: 'Entrenar', accent: MODULE_THEMES.fitness.hex }
+
+  /** Cada día de la tira se pinta con los colores de los módulos que hiciste. */
+  function dayBackground(date: string): string {
+    const day = activity![date]
+    if (!day) return 'rgba(255,255,255,0.08)'
+    const colors: string[] = []
+    if (day.workout > 0) colors.push(MODULE_THEMES.fitness.textHex)
+    if (day.kegel > 0) colors.push(MODULE_THEMES.kegel.textHex)
+    if (day.mindfulness > 0) colors.push(MODULE_THEMES.mindfulness.textHex)
+    if (colors.length === 0) return 'rgba(255,255,255,0.08)'
+    if (colors.length === 1) return colors[0]
+    const stops = colors
+      .map((c, i) => `${c} ${(i / colors.length) * 100}% ${((i + 1) / colors.length) * 100}%`)
+      .join(', ')
+    return `linear-gradient(to bottom, ${stops})`
+  }
 
   return (
     <div className="flex flex-1 flex-col pb-6">
@@ -162,7 +181,8 @@ export default function Home() {
       <div className="flex flex-col gap-3 p-4">
         <Link
           to={nextAction.to}
-          className="rounded-2xl bg-cyan-500 py-4 text-center text-lg font-semibold text-[#0b0d12] active:bg-cyan-400"
+          className="rounded-2xl py-4 text-center text-lg font-semibold text-[#0b0d12]"
+          style={{ background: nextAction.accent }}
         >
           {nextAction.label}
         </Link>
@@ -174,13 +194,18 @@ export default function Home() {
               to={c.to}
               className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 active:bg-white/10"
             >
-              <span className="text-3xl">{c.icon}</span>
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+                style={{ background: `${c.accent}1f` }}
+              >
+                {c.icon}
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-semibold text-gray-100">{c.title}</p>
                 <p className="truncate text-base text-gray-500">{c.status}</p>
               </div>
               {c.done ? (
-                <span className={`text-xl ${c.accent}`} aria-label="completado">
+                <span className="text-xl" style={{ color: c.accent }} aria-label="completado">
                   ✓
                 </span>
               ) : (
@@ -193,7 +218,7 @@ export default function Home() {
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
             <p className="text-lg font-bold text-gray-100">Tu constancia</p>
-            {streak > 0 && <p className="text-base font-medium text-cyan-400">🔥 {streak} días</p>}
+            {streak > 0 && <p className="text-base font-medium text-gray-200">🔥 {streak} días</p>}
           </div>
           <p className="mt-1 text-base text-gray-500">
             Un día cuenta si hiciste algo en cualquier módulo.
@@ -204,7 +229,8 @@ export default function Home() {
               <div
                 key={d.date}
                 title={d.date}
-                className={`h-8 flex-1 rounded-sm ${d.active ? 'bg-cyan-400' : 'bg-white/8'}`}
+                className="h-8 flex-1 rounded-sm"
+                style={{ background: dayBackground(d.date) }}
               />
             ))}
           </div>

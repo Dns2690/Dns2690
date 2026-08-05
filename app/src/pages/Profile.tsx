@@ -65,7 +65,7 @@ export default function Profile() {
     const date = new Date().toISOString().slice(0, 10)
     const who = profile?.name ? profile.name.toLowerCase().replace(/\s+/g, '-') : 'backup'
     a.href = url
-    a.download = `workoutos-${who}-${date}.json`
+    a.download = `soma-${who}-${date}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
