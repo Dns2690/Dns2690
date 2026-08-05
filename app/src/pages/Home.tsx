@@ -136,14 +136,6 @@ export default function Home() {
     },
   ]
 
-  // El botón toma el color del módulo al que lleva, así el destino se anticipa
-  // antes de leerlo.
-  const nextAction = kegelToday < DAILY_ROUTINE_GOAL
-    ? { to: '/kegel/rutina', label: 'Empezar rutina Kegel', accent: MODULE_THEMES.kegel.hex }
-    : activeProgram
-      ? { to: '/programas', label: 'Seguir tu programa', accent: MODULE_THEMES.fitness.hex }
-      : { to: '/entrenar', label: 'Entrenar', accent: MODULE_THEMES.fitness.hex }
-
   /** Cada día de la tira se pinta con los colores de los módulos que hiciste. */
   function dayBackground(date: string): string {
     const day = activity![date]
@@ -162,7 +154,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <div className="flex items-start justify-between px-4 pb-2 pt-6">
+      <div className="flex items-start justify-between px-4 pb-2 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
         <div className="min-w-0">
           <p className="text-2xl font-bold text-gray-100">
             {greeting()}
@@ -180,14 +172,6 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col gap-3 p-4">
-        <Link
-          to={nextAction.to}
-          className="rounded-2xl py-4 text-center text-lg font-semibold text-[#0b0d12]"
-          style={{ background: nextAction.accent }}
-        >
-          {nextAction.label}
-        </Link>
-
         <div className="flex flex-col gap-2">
           {cards.map((c) => (
             <Link

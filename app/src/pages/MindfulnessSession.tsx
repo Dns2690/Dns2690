@@ -218,7 +218,7 @@ export default function MindfulnessSession() {
 
   if (stage === 'preview') {
     return (
-      <div className="flex flex-1 flex-col justify-between p-4 pb-8">
+      <div className="pt-safe flex flex-1 flex-col justify-between p-4 pb-8">
         <div>
           <button onClick={() => navigate('/mindfulness')} className="py-2 text-lg text-gray-400">
             ←
@@ -258,7 +258,7 @@ export default function MindfulnessSession() {
 
   if (stage === 'done') {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-5xl">🧘</p>
         <p className="text-2xl font-bold text-gray-100">
           {elapsedMinutes} {elapsedMinutes === 1 ? 'minuto' : 'minutos'}
@@ -275,12 +275,12 @@ export default function MindfulnessSession() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="pt-safe flex flex-1 flex-col">
       <div className="px-6 pt-6 text-center">
         <p className="text-lg font-semibold text-violet-300">{segment.title}</p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef} mode="breath">
           {breathLabel ? (
             <p className="text-3xl font-semibold text-white">{breathLabel}</p>

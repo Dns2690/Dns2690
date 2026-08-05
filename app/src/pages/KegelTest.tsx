@@ -161,7 +161,7 @@ export default function KegelTest() {
 
   if (stage === 'countdown') {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-4">
         <p className="text-sm text-gray-400">Preparate…</p>
         <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
       </div>
@@ -171,7 +171,7 @@ export default function KegelTest() {
   if (stage === 'done' && result != null) {
     const delta = previous ? Math.round((result - previous.seconds) * 10) / 10 : null
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-5xl">🏔️</p>
         <p className="text-4xl font-bold text-gray-100">
           {result}
@@ -203,12 +203,12 @@ export default function KegelTest() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="pt-safe flex flex-1 flex-col">
       <div className="px-4 pt-4 text-center">
         <p className="text-sm text-gray-400">Sostené la contracción</p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef}>
           <p className="text-5xl font-bold tabular-nums text-gray-100">{elapsed.toFixed(1)}</p>
           <p className="mt-1 text-sm font-medium text-rose-400">segundos</p>

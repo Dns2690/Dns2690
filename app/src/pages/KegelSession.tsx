@@ -303,7 +303,7 @@ export default function KegelSession() {
 
   if (stage === 'loading') {
     return (
-      <div className="flex flex-1 flex-col">
+      <div className="pt-safe flex flex-1 flex-col">
         <TopBar title="Rutina Kegel" back />
         <p className="p-6 text-center text-sm text-gray-500">Preparando…</p>
       </div>
@@ -369,7 +369,7 @@ export default function KegelSession() {
 
   if (stage === 'countdown') {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-4">
         <p className="text-sm text-gray-400">Preparate…</p>
         <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
       </div>
@@ -378,7 +378,7 @@ export default function KegelSession() {
 
   if (stage === 'done') {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-5xl">✅</p>
         <p className="text-xl font-semibold text-gray-100">Rutina completada</p>
         <p className="text-sm text-gray-500">
@@ -398,12 +398,12 @@ export default function KegelSession() {
   const isRest = current?.kind === 'interRest'
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="pt-safe flex flex-1 flex-col">
       <div className="px-4 pt-5 text-center">
         <p className="text-lg text-gray-300">Seguí el ritmo y las señales</p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef} mode={current ? exerciseMode(current.exerciseId) : 'contract'}>
           <p className="text-7xl font-bold tabular-nums leading-none text-white">{stepRemaining}</p>
           <p className="mt-2 text-xl font-semibold text-white">{current ? phaseLabel(current) : ''}</p>
