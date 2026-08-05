@@ -22,7 +22,10 @@ interface AudioSessionCapableNavigator extends Navigator {
  */
 export function unlockAudio(): void {
   if (ctx) {
-    if (ctx.state === 'suspended') void ctx.resume()
+    // Tras bloquear la pantalla o pasar a segundo plano, iOS deja el contexto
+    // en 'suspended' (o 'interrupted' en WebKit). Hay que reanudarlo o los
+    // tonos se pierden en silencio.
+    if (ctx.state !== 'running') void ctx.resume()
     return
   }
 
@@ -57,6 +60,12 @@ export function closeAudio(): void {
 /** Barrido de frecuencia con envolvente suave, para que no chasquee. */
 function tone(fromHz: number, toHz: number, durationSec: number, peakGain = 0.18): void {
   if (!ctx || ctx.state === 'closed') return
+  // Red de seguridad: si el contexto quedó suspendido por el sistema, este tono
+  // se pierde igual, pero deja el contexto listo para los siguientes.
+  if (ctx.state !== 'running') {
+    void ctx.resume()
+    return
+  }
   const now = ctx.currentTime
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()

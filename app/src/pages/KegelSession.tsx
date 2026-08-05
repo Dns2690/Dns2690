@@ -144,7 +144,10 @@ export default function KegelSession() {
     guideRef.current?.setIntensity(intensityAt(entry, elapsed))
     guideRef.current?.setProgress(elapsed / totalMs)
 
-    const remaining = Math.max(1, Math.ceil((entry.endMs - elapsed) / 1000))
+    // El número grande cuenta el bloque entero del ejercicio (45s → 0), no cada
+    // micro-fase: reiniciarlo en cada contracción distrae del ritmo. Las fases
+    // se siguen por la luz y el texto.
+    const remaining = Math.max(0, Math.ceil((entry.blockEndMs - elapsed) / 1000))
     if (remaining !== shownSecondRef.current) {
       shownSecondRef.current = remaining
       setStepRemaining(remaining)
@@ -218,6 +221,9 @@ export default function KegelSession() {
 
   function togglePause() {
     if (paused) {
+      // "Reanudar" es un gesto del usuario, que es justo lo que iOS exige para
+      // volver a habilitar el audio suspendido al bloquear la pantalla.
+      unlockAudio()
       pausedAccumRef.current += performance.now() - pauseStartedRef.current
       setPaused(false)
       void requestWakeLock()

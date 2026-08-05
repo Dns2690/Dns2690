@@ -163,6 +163,9 @@ export interface KegelTimelineEntry {
   step: KegelStep
   startMs: number
   endMs: number
+  /** Límites del bloque completo (todas las reps del ejercicio, o el descanso). */
+  blockStartMs: number
+  blockEndMs: number
 }
 
 export interface KegelSession {

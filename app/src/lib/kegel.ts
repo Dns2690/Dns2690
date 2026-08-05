@@ -190,11 +190,13 @@ export function buildTimeline(exerciseIds: string[], levelId: KegelLevelId): Keg
     const exercise = getExercise(exerciseId)
     if (!exercise) return
     const reps = repsFor(exercise, level)
+    const blockStartMs = cursor
+    const blockEntries: KegelTimelineEntry[] = []
 
     for (let rep = 0; rep < reps; rep++) {
       for (const step of exercise.pattern) {
         const duration = step.seconds * 1000
-        timeline.push({
+        blockEntries.push({
           kind: 'exercise',
           exerciseId,
           exerciseIndex,
@@ -203,10 +205,14 @@ export function buildTimeline(exerciseIds: string[], levelId: KegelLevelId): Keg
           step,
           startMs: cursor,
           endMs: cursor + duration,
+          blockStartMs,
+          blockEndMs: 0, // se completa al cerrar el bloque
         })
         cursor += duration
       }
     }
+    for (const entry of blockEntries) entry.blockEndMs = cursor
+    timeline.push(...blockEntries)
 
     const isLast = exerciseIndex === exerciseIds.length - 1
     if (!isLast) {
@@ -220,6 +226,8 @@ export function buildTimeline(exerciseIds: string[], levelId: KegelLevelId): Keg
         step: { phase: 'rest', seconds: level.restSeconds, from: 0, to: 0 },
         startMs: cursor,
         endMs: cursor + duration,
+        blockStartMs: cursor,
+        blockEndMs: cursor + duration,
       })
       cursor += duration
     }
