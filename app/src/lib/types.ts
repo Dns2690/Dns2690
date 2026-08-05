@@ -236,6 +236,11 @@ export interface MindfulnessSettings {
   ambient: string
   ambientVolume: number
   bells: boolean
+  voiceEnabled?: boolean
+  /** `voiceURI` de la voz elegida; vacío usa la que el sistema dé por defecto. */
+  voiceURI?: string
+  /** Velocidad del habla. Por debajo de 1 suena más calmo. */
+  voiceRate?: number
 }
 
 export interface Profile {

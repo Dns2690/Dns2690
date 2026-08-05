@@ -1,175 +1,191 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TopBar from '../components/TopBar'
+import { getMindfulnessSettings, saveMindfulnessSettings } from '../lib/store'
+import type { MindfulnessSettings } from '../lib/types'
 
 /**
- * Diagnóstico de voz guiada.
+ * Elección de voz.
  *
- * Las fuentes se contradicen sobre si iOS permite hablar desde un temporizador:
- * unas dicen que WebKit descarta en silencio todo `speak()` que no salga de un
- * gesto, otras que basta con el primer gesto para desbloquear la página. No se
- * puede resolver leyendo — hay que medirlo en el aparato.
- *
- * Cada prueba registra si el motor avisó que empezó a hablar. Si la prueba a
- * los 20 segundos arranca, la meditación guiada por voz es viable.
+ * La prueba anterior ya confirmó que iOS deja hablar desde temporizadores. Lo
+ * que queda es la calidad: `getVoices()` devuelve la voz compacta del sistema,
+ * que suena robótica. Las voces mejoradas hay que bajarlas a mano en Ajustes de
+ * iOS, y aun así puede que el navegador no las exponga — depende del aparato y
+ * de la versión. No hay forma de saberlo sin listar lo que este teléfono da.
  */
 
-type Result = 'pending' | 'running' | 'spoke' | 'silent' | 'error'
+const SAMPLE =
+  'Llevá la atención a la respiración. No hace falta cambiarla, solo notar cómo entra y cómo sale.'
 
-interface Probe {
-  id: string
-  label: string
-  detail: string
-  delayMs: number
-}
-
-const PROBES: Probe[] = [
-  { id: 'direct', label: '1 · Al tocar', detail: 'Habla en el mismo gesto. Es la referencia: si esta falla, no hay voz posible.', delayMs: 0 },
-  { id: 'short', label: '2 · A los 5 segundos', detail: 'Primer temporizador después del gesto.', delayMs: 5000 },
-  { id: 'long', label: '3 · A los 20 segundos', detail: 'La prueba que importa: es la distancia real entre consignas.', delayMs: 20000 },
-]
-
-const PHRASES: Record<string, string> = {
-  direct: 'Prueba uno. Si escuchás esto, la voz funciona al tocar.',
-  short: 'Prueba dos. Cinco segundos después del gesto.',
-  long: 'Prueba tres. Veinte segundos después. Si escuchás esto, la meditación guiada por voz es posible.',
+const DEFAULTS: MindfulnessSettings = {
+  levelId: 'beginner',
+  breathId: 'coherent',
+  ambient: 'drone',
+  ambientVolume: 0.55,
+  bells: true,
+  voiceEnabled: false,
+  voiceRate: 0.85,
 }
 
 export default function VoiceTest() {
-  const [results, setResults] = useState<Record<string, Result>>({})
-  const [voiceName, setVoiceName] = useState<string>('')
-  const [supported] = useState(() => typeof window !== 'undefined' && 'speechSynthesis' in window)
-  // iOS puede recolectar la utterance antes de que termine y perder sus
-  // eventos, así que hay que mantener la referencia viva a mano.
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [settings, setSettings] = useState<MindfulnessSettings | null>(null)
+  const [speaking, setSpeaking] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
   const keepAlive = useRef<SpeechSynthesisUtterance[]>([])
-  const timers = useRef<number[]>([])
 
-  function speak(id: string) {
-    const u = new SpeechSynthesisUtterance(PHRASES[id])
-    u.lang = 'es-ES'
-    u.rate = 0.95
-    const voices = window.speechSynthesis.getVoices()
-    const es = voices.find((v) => v.lang.startsWith('es'))
-    if (es) {
-      u.voice = es
-      setVoiceName(`${es.name} (${es.lang})`)
-    }
-    keepAlive.current.push(u)
+  useEffect(() => {
+    getMindfulnessSettings().then((s) => setSettings({ ...DEFAULTS, ...(s ?? {}) }))
+  }, [])
 
-    let started = false
-    u.onstart = () => {
-      started = true
-      setResults((r) => ({ ...r, [id]: 'spoke' }))
-    }
-    u.onerror = () => setResults((r) => ({ ...r, [id]: 'error' }))
-    // Si a los 2 s no arrancó, WebKit la descartó en silencio.
-    const t = window.setTimeout(() => {
-      if (!started) setResults((r) => ({ ...r, [id]: r[id] === 'spoke' ? 'spoke' : 'silent' }))
-    }, 2000)
-    timers.current.push(t)
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return
+    // La lista suele llegar vacía en la primera llamada y poblarse después.
+    const load = () => setVoices(window.speechSynthesis.getVoices())
+    load()
+    window.speechSynthesis.addEventListener('voiceschanged', load)
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', load)
+  }, [])
 
-    setResults((r) => ({ ...r, [id]: 'running' }))
+  async function update(patch: Partial<MindfulnessSettings>) {
+    if (!settings) return
+    const next = { ...settings, ...patch }
+    setSettings(next)
+    await saveMindfulnessSettings(next)
+  }
+
+  function preview(voice: SpeechSynthesisVoice) {
+    window.speechSynthesis.cancel()
+    const u = new SpeechSynthesisUtterance(SAMPLE)
+    u.voice = voice
+    u.lang = voice.lang
+    u.rate = settings?.voiceRate ?? 0.85
+    u.onend = () => setSpeaking(null)
+    u.onerror = () => setSpeaking(null)
+    keepAlive.current = [u]
+    setSpeaking(voice.voiceURI)
     window.speechSynthesis.speak(u)
   }
 
-  function runAll() {
-    for (const t of timers.current) window.clearTimeout(t)
-    timers.current = []
-    keepAlive.current = []
-    setResults({})
-    window.speechSynthesis.cancel()
-
-    for (const probe of PROBES) {
-      if (probe.delayMs === 0) {
-        speak(probe.id)
-      } else {
-        setResults((r) => ({ ...r, [probe.id]: 'pending' }))
-        timers.current.push(window.setTimeout(() => speak(probe.id), probe.delayMs))
-      }
-    }
+  if (!settings) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <TopBar title="Voz" back />
+        <p className="p-6 text-center text-base text-gray-500">Cargando…</p>
+      </div>
+    )
   }
 
-  const badge: Record<Result, { text: string; className: string }> = {
-    pending: { text: 'esperando', className: 'text-gray-500' },
-    running: { text: 'hablando…', className: 'text-violet-300' },
-    spoke: { text: '✓ sonó', className: 'text-violet-400 font-semibold' },
-    silent: { text: '✕ mudo', className: 'text-amber-400 font-semibold' },
-    error: { text: '✕ error', className: 'text-red-400 font-semibold' },
-  }
-
-  const done = PROBES.every((p) => ['spoke', 'silent', 'error'].includes(results[p.id]))
-  const longWorks = results.long === 'spoke'
+  const spanish = voices.filter((v) => v.lang.toLowerCase().startsWith('es'))
+  const shown = showAll ? voices : spanish
+  const selected = settings.voiceURI
 
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <TopBar title="Prueba de voz" back />
+      <TopBar title="Voz" back />
 
       <div className="flex flex-col gap-4 p-4">
+        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4">
+          <p className="text-base font-medium text-violet-300">✓ Tu iPhone permite voz guiada</p>
+          <p className="mt-1 text-base leading-relaxed text-gray-400">
+            La prueba anterior confirmó que puede hablar desde temporizadores. Falta elegir una voz que valga la
+            pena escuchar diez minutos seguidos.
+          </p>
+        </div>
+
         <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-base leading-relaxed text-gray-300">
-            Esta pantalla mide si tu iPhone deja hablar a la app desde un temporizador. Es lo que decide si la
-            meditación puede tener voz guiada.
+          <p className="text-base font-semibold text-gray-100">Para conseguir mejores voces</p>
+          <p className="mt-2 text-base leading-relaxed text-gray-400">
+            La voz que trae iOS de fábrica es la compacta, y suena robótica. Las buenas hay que bajarlas a mano:
+          </p>
+          <p className="mt-2 text-base leading-relaxed text-gray-300">
+            Ajustes → Accesibilidad → <strong>Contenido hablado</strong> → Voces → Español → tocá una voz y bajá la
+            versión <strong>Mejorada</strong> o <strong>Premium</strong>.
           </p>
           <p className="mt-2 text-base leading-relaxed text-gray-500">
-            Tocá Empezar, subí el volumen y esperá <strong>25 segundos sin salir de la pantalla</strong>. Vas a
-            escuchar hasta tres frases.
+            Pesan más de 100 MB cada una y hace falta wifi. Después volvé acá y recargá: si el navegador las expone,
+            aparecen en la lista. Puede que no las muestre —eso depende de tu versión de iOS y no lo puedo saber
+            desde acá.
           </p>
         </div>
 
-        {!supported && (
-          <p className="rounded-2xl bg-amber-500/10 p-4 text-base text-amber-300">
-            Este navegador no expone síntesis de voz.
-          </p>
-        )}
+        <label className="flex items-center justify-between rounded-2xl bg-white/5 p-4">
+          <div className="min-w-0 flex-1 pr-3">
+            <p className="text-base font-medium text-gray-100">Usar voz en las sesiones</p>
+            <p className="text-sm text-gray-500">Si la apagás, la guía queda por texto y campanas</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={settings.voiceEnabled ?? false}
+            onChange={(e) => update({ voiceEnabled: e.target.checked })}
+            className="h-5 w-5 shrink-0 accent-violet-400"
+          />
+        </label>
 
-        <button
-          onClick={runAll}
-          disabled={!supported}
-          className="rounded-2xl bg-violet-500 py-4 text-lg font-semibold text-white active:bg-violet-400 disabled:opacity-40"
-        >
-          Empezar prueba
-        </button>
+        <div className="rounded-2xl bg-white/5 p-4">
+          <div className="flex items-baseline justify-between">
+            <p className="text-base font-semibold text-gray-100">Velocidad</p>
+            <p className="text-base text-violet-300">{(settings.voiceRate ?? 0.85).toFixed(2)}×</p>
+          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            Más lento suena más calmo, y es el ajuste que más mejora una voz mediocre.
+          </p>
+          <input
+            type="range"
+            min="0.6"
+            max="1.1"
+            step="0.05"
+            value={settings.voiceRate ?? 0.85}
+            onChange={(e) => update({ voiceRate: Number(e.target.value) })}
+            className="mt-3 w-full accent-violet-400"
+          />
+        </div>
 
         <div className="flex flex-col gap-2">
-          {PROBES.map((p) => {
-            const state = results[p.id] ?? 'pending'
-            return (
-              <div key={p.id} className="rounded-xl bg-white/5 p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-base font-medium text-gray-100">{p.label}</p>
-                  <span className={`shrink-0 text-base ${badge[state].className}`}>{badge[state].text}</span>
-                </div>
-                <p className="mt-1 text-sm leading-relaxed text-gray-500">{p.detail}</p>
-              </div>
-            )
-          })}
+          <div className="flex items-baseline justify-between px-1">
+            <p className="text-sm text-gray-500">
+              {shown.length} {shown.length === 1 ? 'voz disponible' : 'voces disponibles'}
+            </p>
+            {voices.length > spanish.length && (
+              <button onClick={() => setShowAll((v) => !v)} className="text-sm text-violet-400">
+                {showAll ? 'Solo español' : `Ver todas (${voices.length})`}
+              </button>
+            )}
+          </div>
+
+          {shown.length === 0 && (
+            <p className="rounded-2xl bg-white/5 p-4 text-base text-gray-500">
+              Este navegador no está exponiendo voces todavía. Probá recargar la pantalla.
+            </p>
+          )}
+
+          {shown.map((v) => (
+            <div
+              key={v.voiceURI}
+              className={`flex items-center gap-3 rounded-xl p-3 ${
+                selected === v.voiceURI ? 'bg-violet-400/15 ring-1 ring-violet-400' : 'bg-white/5'
+              }`}
+            >
+              <button onClick={() => update({ voiceURI: v.voiceURI })} className="min-w-0 flex-1 text-left">
+                <p className="text-base font-medium text-gray-100">{v.name}</p>
+                <p className="text-sm text-gray-500">
+                  {v.lang}
+                  {v.localService ? ' · en el dispositivo' : ' · por red'}
+                  {v.default ? ' · por defecto' : ''}
+                </p>
+              </button>
+              <button
+                onClick={() => preview(v)}
+                className="shrink-0 rounded-lg bg-white/10 px-4 py-2 text-base text-gray-100 active:bg-white/20"
+              >
+                {speaking === v.voiceURI ? '▪' : '▶'}
+              </button>
+            </div>
+          ))}
         </div>
 
-        {voiceName && (
-          <p className="px-1 text-sm text-gray-500">
-            Voz elegida: <span className="text-gray-300">{voiceName}</span>
-          </p>
-        )}
-
-        {done && (
-          <div
-            className={`rounded-2xl p-4 ${
-              longWorks ? 'bg-violet-500/10' : 'bg-amber-500/10'
-            }`}
-          >
-            <p className={`text-base font-semibold ${longWorks ? 'text-violet-300' : 'text-amber-300'}`}>
-              {longWorks ? '✓ La voz guiada es viable' : '✕ La voz guiada no es viable en este dispositivo'}
-            </p>
-            <p className="mt-1 text-base leading-relaxed text-gray-400">
-              {longWorks
-                ? 'Tu iPhone deja hablar desde temporizadores. Pasame este resultado y agrego voz a las sesiones.'
-                : 'Tu iPhone descarta el habla programada, así que una voz narrada se cortaría a mitad de sesión. La guía queda por texto y campanas.'}
-            </p>
-          </div>
-        )}
-
         <p className="px-1 text-sm leading-relaxed text-gray-600">
-          Importante: el resultado depende de que hayas escuchado las frases, no solo de lo que diga la pantalla. Si
-          alguna figura como “sonó” pero no la oíste, avisame — significa que el motor miente sobre su estado.
+          Si ninguna te convence, hay un camino mejor para una app personal: grabar tu propia voz una vez y que sea
+          esa la que te guíe. Decímelo y lo construyo.
         </p>
       </div>
     </div>
