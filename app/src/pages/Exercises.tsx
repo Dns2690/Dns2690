@@ -20,7 +20,8 @@ export default function Exercises() {
   return (
     <div className="flex flex-1 flex-col">
       <TopBar
-        title="Ejercicios"
+        title="Biblioteca"
+        back
         right={
           <Link
             to="/ajustes"

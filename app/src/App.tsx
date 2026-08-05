@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 import Splash from './components/Splash'
+import Home from './pages/Home'
+import FitnessHub from './pages/FitnessHub'
+import Mindfulness from './pages/Mindfulness'
 import Exercises from './pages/Exercises'
 import ExerciseDetail from './pages/ExerciseDetail'
 import Routines from './pages/Routines'
@@ -34,7 +37,10 @@ function Shell() {
     <>
       <main className="flex flex-1 flex-col">
         <Routes>
-          <Route path="/" element={<Exercises />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/ejercicios" element={<FitnessHub />} />
+          <Route path="/ejercicios/biblioteca" element={<Exercises />} />
+          <Route path="/mindfulness" element={<Mindfulness />} />
           <Route path="/ejercicio/:id" element={<ExerciseDetail />} />
           <Route path="/programas" element={<ProgramsList />} />
           <Route path="/programas/:programId" element={<Program />} />
