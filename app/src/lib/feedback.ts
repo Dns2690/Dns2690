@@ -172,6 +172,28 @@ export function cuePhase(phase: KegelPhase, opts: CueOptions): void {
   if (opts.vibration) vibrate(PHASE_VIBRATION[phase])
 }
 
+/**
+ * Un pulso del tren que simula la vibración. Corto y de poco volumen: lo que
+ * hace el efecto no es cada golpe sino la repetición rápida, igual que un motor
+ * háptico. Suelto no debería llamar la atención.
+ */
+export function pulseTick(intensity: number, opts: CueOptions): void {
+  if (!opts.sound) return
+  const v = Math.min(1, Math.max(0, intensity))
+  thump({ freq: 70 + v * 30, cutoff: 260 + v * 180, duration: 0.045, gain: 0.07 + v * 0.11 })
+}
+
+/**
+ * Cadencia del tren de pulsos, en milisegundos.
+ *
+ * Se acelera con la intensidad para que la rampa de fuerza se escuche además de
+ * verse: en un Front Clamp, los pulsos apurándose dicen "seguí apretando".
+ */
+export function pulseIntervalMs(intensity: number): number {
+  const v = Math.min(1, Math.max(0, intensity))
+  return 165 - v * 75
+}
+
 export function cueCountdown(opts: CueOptions): void {
   if (opts.sound) thump({ freq: 110, cutoff: 520, duration: 0.09, gain: 0.22 })
   if (opts.vibration) vibrate([20])

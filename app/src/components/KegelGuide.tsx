@@ -22,10 +22,22 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
  * vez de pasar por estado de React: a 60 cuadros por segundo, re-renderizar el
  * árbol desincronizaría la luz del número.
  */
-const KegelGuide = forwardRef<KegelGuideHandle, { children: ReactNode }>(function KegelGuide(
-  { children },
-  ref,
-) {
+/**
+ * El modo de alargamiento (Reverse Kegel) usa violeta en vez de cyan. No es
+ * decoración: confundir un Reverse Kegel con uno normal invierte el efecto del
+ * ejercicio, así que la diferencia tiene que verse de un vistazo.
+ */
+const MODE_GRADIENT: Record<'contract' | 'lengthen', string> = {
+  contract:
+    'radial-gradient(circle, rgba(34,211,238,0.95) 0%, rgba(34,211,238,0.85) 42%, rgba(14,165,190,0.45) 66%, rgba(34,211,238,0) 78%)',
+  lengthen:
+    'radial-gradient(circle, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.85) 42%, rgba(124,58,237,0.45) 66%, rgba(167,139,250,0) 78%)',
+}
+
+const KegelGuide = forwardRef<
+  KegelGuideHandle,
+  { children: ReactNode; mode?: 'contract' | 'lengthen' }
+>(function KegelGuide({ children, mode = 'contract' }, ref) {
   const discRef = useRef<HTMLDivElement>(null)
   const arcRef = useRef<SVGCircleElement>(null)
   const dotRef = useRef<SVGCircleElement>(null)
@@ -59,8 +71,7 @@ const KegelGuide = forwardRef<KegelGuideHandle, { children: ReactNode }>(functio
         aria-hidden="true"
         className="absolute h-[330px] w-[330px] rounded-full"
         style={{
-          background:
-            'radial-gradient(circle, rgba(34,211,238,0.95) 0%, rgba(34,211,238,0.85) 42%, rgba(14,165,190,0.45) 66%, rgba(34,211,238,0) 78%)',
+          background: MODE_GRADIENT[mode],
           transform: 'scale(0.52)',
           opacity: 0.1,
           willChange: 'transform, opacity',

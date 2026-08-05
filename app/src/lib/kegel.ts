@@ -140,6 +140,69 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'rest', seconds: 10, from: 0, to: 0 },
     ],
   },
+  {
+    id: 'reverse',
+    name: 'Reverse Kegel',
+    icon: '🌬️',
+    mode: 'lengthen',
+    description:
+      'Al revés: en vez de apretar, empujá suave hacia afuera —como si fueras a orinar o soltar gas, sin hacerlo— y sostené. Alarga y relaja el piso pélvico. Nunca hagas fuerza.',
+    minLevel: 'medium',
+    pattern: [
+      { phase: 'contract', seconds: 2, from: 0, to: 1 },
+      { phase: 'hold', seconds: 3, from: 1, to: 1 },
+      { phase: 'release', seconds: 2, from: 1, to: 0 },
+      { phase: 'rest', seconds: 4, from: 0, to: 0 },
+    ],
+  },
+  {
+    id: 'knack',
+    name: 'The Knack',
+    icon: '🛡️',
+    description:
+      'Contracción de reacción: apretá fuerte y rápido, sostené 2 segundos y soltá. Entrena el reflejo que protege ante un esfuerzo repentino, como toser o levantar peso.',
+    minLevel: 'medium',
+    pattern: [
+      { phase: 'contract', seconds: 0.5, from: 0, to: 1 },
+      { phase: 'hold', seconds: 2, from: 1, to: 1 },
+      { phase: 'release', seconds: 1, from: 1, to: 0 },
+      { phase: 'rest', seconds: 3, from: 0, to: 0 },
+    ],
+  },
+  {
+    id: 'endurance',
+    name: 'Endurance',
+    icon: '🧗',
+    description:
+      'Contraé a media fuerza —no al máximo— y sostené 15 segundos sin aflojar. Trabaja las fibras lentas, las de resistencia, que se entrenan mejor por debajo del máximo.',
+    minLevel: 'advanced',
+    pattern: [
+      { phase: 'contract', seconds: 2, from: 0, to: 0.6, label: '60%' },
+      { phase: 'hold', seconds: 15, from: 0.6, to: 0.6, label: '60%' },
+      { phase: 'release', seconds: 2, from: 0.6, to: 0 },
+      { phase: 'rest', seconds: 10, from: 0, to: 0 },
+    ],
+  },
+  {
+    id: 'full-elevator',
+    name: 'Full Elevator',
+    icon: '🛗',
+    description:
+      'El ascensor completo: subí por cuatro pisos hasta el máximo, sostené arriba y bajá piso por piso sin soltar de golpe. El control al bajar es la parte difícil.',
+    minLevel: 'advanced',
+    pattern: [
+      { phase: 'contract', seconds: 1.5, from: 0, to: 0.25, label: '25%' },
+      { phase: 'contract', seconds: 1.5, from: 0.25, to: 0.5, label: '50%' },
+      { phase: 'contract', seconds: 1.5, from: 0.5, to: 0.75, label: '75%' },
+      { phase: 'contract', seconds: 1.5, from: 0.75, to: 1, label: '100%' },
+      { phase: 'hold', seconds: 3, from: 1, to: 1, label: '100%' },
+      { phase: 'release', seconds: 1.5, from: 1, to: 0.75, label: '75%' },
+      { phase: 'release', seconds: 1.5, from: 0.75, to: 0.5, label: '50%' },
+      { phase: 'release', seconds: 1.5, from: 0.5, to: 0.25, label: '25%' },
+      { phase: 'release', seconds: 1.5, from: 0.25, to: 0 },
+      { phase: 'rest', seconds: 3, from: 0, to: 0 },
+    ],
+  },
 ]
 
 export function getExercise(id: string): KegelExercise | undefined {
@@ -251,12 +314,24 @@ const PHASE_LABELS: Record<KegelStep['phase'], string> = {
   rest: 'Descansá',
 }
 
+const LENGTHEN_LABELS: Record<KegelStep['phase'], string> = {
+  contract: 'Empujá suave',
+  hold: 'Sostené',
+  release: 'Volvé',
+  rest: 'Descansá',
+}
+
 export function phaseLabel(entry: KegelTimelineEntry): string {
   if (entry.kind === 'interRest') return 'Descanso'
-  const base = PHASE_LABELS[entry.step.phase]
-  // Los escalones de Gearbox necesitan el verbo además del porcentaje: un
+  const mode = getExercise(entry.exerciseId)?.mode ?? 'contract'
+  const base = mode === 'lengthen' ? LENGTHEN_LABELS[entry.step.phase] : PHASE_LABELS[entry.step.phase]
+  // Los escalones del ascensor necesitan el verbo además del porcentaje: un
   // "33%" solo no dice si hay que subir o bajar.
   return entry.step.label ? `${base} ${entry.step.label}` : base
+}
+
+export function exerciseMode(exerciseId: string): 'contract' | 'lengthen' {
+  return getExercise(exerciseId)?.mode ?? 'contract'
 }
 
 /** Intensidad 0–1 interpolada dentro del paso actual. */

@@ -137,12 +137,20 @@ export interface KegelStep {
   label?: string
 }
 
+/**
+ * 'lengthen' invierte el sentido del trabajo: en vez de apretar, se alarga y
+ * relaja el piso pélvico (Reverse Kegel). Cambia las etiquetas y el color de la
+ * guía, porque hacer uno creyendo que es el otro es contraproducente.
+ */
+export type KegelMode = 'contract' | 'lengthen'
+
 export interface KegelExercise {
   id: string
   name: string
   icon: string
   description: string
   minLevel: KegelLevelId
+  mode?: KegelMode
   pattern: KegelStep[]
 }
 

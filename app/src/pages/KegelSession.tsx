@@ -4,6 +4,7 @@ import TopBar from '../components/TopBar'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
 import {
   buildTimeline,
+  exerciseMode,
   formatDuration,
   generateRoutine,
   getExercise,
@@ -20,9 +21,12 @@ import {
   cueCountdown,
   cueFinish,
   cuePhase,
+  pulseIntervalMs,
+  pulseTick,
   releaseWakeLock,
   requestWakeLock,
   unlockAudio,
+  vibrate,
 } from '../lib/feedback'
 import { getKegelSettings, listKegelSessions, saveKegelSession } from '../lib/store'
 import type { KegelSettings, KegelTimelineEntry } from '../lib/types'
@@ -45,6 +49,8 @@ export default function KegelSession() {
   const [paused, setPaused] = useState(false)
   const [prepCount, setPrepCount] = useState(3)
   const [restWarning, setRestWarning] = useState<string | null>(null)
+  const [showInfo, setShowInfo] = useState(false)
+  const pausedByInfoRef = useRef(false)
 
   // Refs del reloj: el bucle no debe depender del ciclo de render.
   const settingsRef = useRef(settings)
@@ -55,6 +61,7 @@ export default function KegelSession() {
   const rafRef = useRef(0)
   const cursorRef = useRef(0)
   const cuedRef = useRef(-1)
+  const lastPulseRef = useRef(0)
   const shownSecondRef = useRef(-1)
   const finishedRef = useRef(false)
 
@@ -134,14 +141,36 @@ export default function KegelSession() {
       cursorRef.current++
     }
     const entry = tl[cursorRef.current]
+    const intensity = intensityAt(entry, elapsed)
+
+    // Mientras el aro crece y se mantiene va un tren de pulsos cortos que imita
+    // una vibración. En los Reverse Kegel no: ahí el trabajo es aflojar, y un
+    // zumbido empujaría a apretar, que es justo lo contrario.
+    const pulsing =
+      entry.kind === 'exercise' &&
+      exerciseMode(entry.exerciseId) === 'contract' &&
+      (entry.step.phase === 'contract' || entry.step.phase === 'hold')
 
     if (cursorRef.current !== cuedRef.current) {
       cuedRef.current = cursorRef.current
-      cuePhase(entry.step.phase, settingsRef.current)
+      if (pulsing) {
+        lastPulseRef.current = 0 // que el primer pulso salga ya
+      } else {
+        cuePhase(entry.step.phase, settingsRef.current)
+      }
       setEntryIndex(cursorRef.current)
     }
 
-    guideRef.current?.setIntensity(intensityAt(entry, elapsed))
+    if (pulsing) {
+      const now = performance.now()
+      if (now - lastPulseRef.current >= pulseIntervalMs(intensity)) {
+        lastPulseRef.current = now
+        pulseTick(intensity, settingsRef.current)
+        if (settingsRef.current.vibration) vibrate([18])
+      }
+    }
+
+    guideRef.current?.setIntensity(intensity)
     // El anillo acompaña al número: ambos miden el bloque actual, no la rutina
     // entera. El total va aparte, en "Queda X:XX".
     const blockSpan = entry.blockEndMs - entry.blockStartMs
@@ -222,8 +251,32 @@ export default function KegelSession() {
     }
   }, [stopLoop])
 
+  function openInfo() {
+    if (!paused) {
+      pauseStartedRef.current = performance.now()
+      pausedByInfoRef.current = true
+      setPaused(true)
+      void releaseWakeLock()
+    }
+    setShowInfo(true)
+  }
+
+  function closeInfo() {
+    setShowInfo(false)
+    // Solo reanudamos si la pausa la provocó abrir la descripción; si ya estaba
+    // pausado a mano, se queda pausado.
+    if (pausedByInfoRef.current) {
+      pausedByInfoRef.current = false
+      unlockAudio()
+      pausedAccumRef.current += performance.now() - pauseStartedRef.current
+      setPaused(false)
+      void requestWakeLock()
+    }
+  }
+
   function togglePause() {
     if (paused) {
+      pausedByInfoRef.current = false
       // "Reanudar" es un gesto del usuario, que es justo lo que iOS exige para
       // volver a habilitar el audio suspendido al bloquear la pantalla.
       unlockAudio()
@@ -351,15 +404,28 @@ export default function KegelSession() {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center">
-        <KegelGuide ref={guideRef}>
+        <KegelGuide ref={guideRef} mode={current ? exerciseMode(current.exerciseId) : 'contract'}>
           <p className="text-7xl font-bold tabular-nums leading-none text-white">{stepRemaining}</p>
           <p className="mt-2 text-xl font-semibold text-white">{current ? phaseLabel(current) : ''}</p>
         </KegelGuide>
 
         <div className="mt-4 text-center">
-          <p className="text-xl font-bold text-gray-100">
-            {isRest ? 'Descanso' : (currentExercise?.name ?? '')}
-          </p>
+          {isRest ? (
+            <p className="text-xl font-bold text-gray-100">Descanso</p>
+          ) : (
+            <button
+              onClick={openInfo}
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-1 active:bg-white/10"
+            >
+              <span className="text-xl font-bold text-gray-100">{currentExercise?.name ?? ''}</span>
+              <span
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-cyan-400"
+                aria-hidden="true"
+              >
+                i
+              </span>
+            </button>
+          )}
           <p className="mt-1 text-base text-gray-400">
             {isRest
               ? 'Preparate para el próximo ejercicio'
@@ -370,6 +436,39 @@ export default function KegelSession() {
           <p className="mt-2 text-base text-gray-500">Queda {formatDuration(totalRemaining)}</p>
         </div>
       </div>
+
+      {showInfo && currentExercise && (
+        <div className="fixed inset-0 z-30 flex items-end bg-black/70" onClick={closeInfo}>
+          <div
+            className="max-h-[80vh] w-full overflow-y-auto rounded-t-3xl bg-[#151922] p-5 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center gap-3">
+              <span className="text-3xl">{currentExercise.icon}</span>
+              <div>
+                <p className="text-2xl font-bold text-gray-100">{currentExercise.name}</p>
+                <p className="text-sm text-amber-400">Rutina en pausa</p>
+              </div>
+            </div>
+
+            <p className="text-lg leading-relaxed text-gray-300">{currentExercise.description}</p>
+
+            {exerciseMode(currentExercise.id) === 'lengthen' && (
+              <p className="mt-3 rounded-xl bg-violet-500/10 p-3 text-base leading-relaxed text-violet-300">
+                Este ejercicio es al revés que los demás: acá se afloja y se alarga, no se aprieta. Por eso la luz es
+                violeta.
+              </p>
+            )}
+
+            <button
+              onClick={closeInfo}
+              className="mt-5 w-full rounded-xl bg-cyan-500 py-4 text-lg font-semibold text-[#0b0d12] active:bg-cyan-400"
+            >
+              Seguir
+            </button>
+          </div>
+        </div>
+      )}
 
       {paused && (
         <p className="pb-2 text-center text-base font-medium text-amber-400">En pausa</p>
