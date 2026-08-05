@@ -69,60 +69,100 @@ function getNoise(context: AudioContext): AudioBuffer {
   return buffer
 }
 
-interface ThumpOptions {
-  /** Fundamental del cuerpo grave, en Hz. */
+interface BuzzOptions {
+  /** Fundamental en Hz. Cerca de 210 es donde suena un teléfono vibrando. */
   freq: number
-  /** Corte del filtro sobre el ruido: más bajo = más sordo. */
-  cutoff: number
   duration: number
   gain: number
+  /** Cadencia de la modulación de amplitud: el "grano" del motor. */
+  modHz?: number
+  /** Profundidad de esa modulación, 0–1. */
+  modDepth?: number
+  /** Ruido agregado, para el traqueteo del aparato. */
+  noise?: number
 }
 
 /**
- * Golpe sordo en vez de un pitido.
+ * Zumbido sintetizado a imagen de un motor háptico.
  *
- * Un barrido de seno agudo se lee como alarma y cansa en una sesión de varios
- * minutos. Esto combina un ruido filtrado paso-bajo (la parte "táctil", que es
- * lo que hace que se perciba como una vibración) con un seno grave que le da
- * cuerpo. El ruido además se reproduce bien en el parlante del teléfono, que
- * apenas responde por debajo de los 200 Hz.
+ * Tres decisiones dan el parecido:
+ *
+ * 1. Fundamental cerca de 210 Hz. Un teléfono vibrando sobre una mesa tiene su
+ *    pico de resonancia medido cerca de 233 Hz, y ese es el sonido que uno
+ *    reconoce. La versión anterior usaba 70–100 Hz, por debajo de lo que el
+ *    parlante del teléfono puede reproducir, así que se escuchaba sobre todo el
+ *    ruido: un golpe seco en vez de un zumbido.
+ * 2. Onda cuadrada, no senoidal. Los armónicos hacen que se lea como mecanismo
+ *    y no como nota musical.
+ * 3. Modulación de amplitud a ~55 Hz. Es lo que produce el "brrr" granulado; un
+ *    tono de amplitud constante suena a zumbador, no a vibración.
  */
-function thump({ freq, cutoff, duration, gain: peakGain }: ThumpOptions): void {
+function buzz({
+  freq,
+  duration,
+  gain: peakGain,
+  modHz = 55,
+  modDepth = 0.45,
+  noise = 0.16,
+}: BuzzOptions): void {
   if (!ctx || ctx.state === 'closed') return
   // Red de seguridad: si el contexto quedó suspendido por el sistema, este
-  // golpe se pierde igual, pero deja el contexto listo para los siguientes.
+  // pulso se pierde igual, pero deja el contexto listo para los siguientes.
   if (ctx.state !== 'running') {
     void ctx.resume()
     return
   }
   const now = ctx.currentTime
+  const stopAt = now + duration + 0.02
 
   const envelope = ctx.createGain()
   envelope.gain.setValueAtTime(0, now)
-  envelope.gain.linearRampToValueAtTime(peakGain, now + 0.008)
+  envelope.gain.linearRampToValueAtTime(peakGain, now + 0.006)
+  envelope.gain.setValueAtTime(peakGain, now + duration * 0.6)
   envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration)
   envelope.connect(ctx.destination)
 
-  const noise = ctx.createBufferSource()
-  noise.buffer = getNoise(ctx)
-  const lowpass = ctx.createBiquadFilter()
-  lowpass.type = 'lowpass'
-  lowpass.frequency.setValueAtTime(cutoff, now)
-  lowpass.Q.value = 0.7
-  noise.connect(lowpass)
-  lowpass.connect(envelope)
-  noise.start(now)
-  noise.stop(now + duration + 0.02)
+  // Deja pasar la banda de la vibración y recorta la aspereza de la cuadrada.
+  const band = ctx.createBiquadFilter()
+  band.type = 'bandpass'
+  band.frequency.setValueAtTime(freq * 1.25, now)
+  band.Q.value = 1.6
+  band.connect(envelope)
 
-  const body = ctx.createOscillator()
-  body.type = 'sine'
-  body.frequency.setValueAtTime(freq, now)
-  const bodyGain = ctx.createGain()
-  bodyGain.gain.setValueAtTime(0.55, now)
-  body.connect(bodyGain)
-  bodyGain.connect(envelope)
-  body.start(now)
-  body.stop(now + duration + 0.02)
+  // El LFO suma sobre el valor base, así la amplitud oscila sin cortarse.
+  const modulated = ctx.createGain()
+  modulated.gain.setValueAtTime(1 - modDepth, now)
+  const lfo = ctx.createOscillator()
+  lfo.type = 'sine'
+  lfo.frequency.setValueAtTime(modHz, now)
+  const lfoDepth = ctx.createGain()
+  lfoDepth.gain.setValueAtTime(modDepth, now)
+  lfo.connect(lfoDepth)
+  lfoDepth.connect(modulated.gain)
+  lfo.start(now)
+  lfo.stop(stopAt)
+  modulated.connect(band)
+
+  const carrier = ctx.createOscillator()
+  carrier.type = 'square'
+  carrier.frequency.setValueAtTime(freq, now)
+  const carrierGain = ctx.createGain()
+  carrierGain.gain.setValueAtTime(0.45, now)
+  carrier.connect(carrierGain)
+  carrierGain.connect(modulated)
+  carrier.start(now)
+  carrier.stop(stopAt)
+
+  if (noise > 0) {
+    const rattle = ctx.createBufferSource()
+    rattle.buffer = getNoise(ctx)
+    const rattleGain = ctx.createGain()
+    rattleGain.gain.setValueAtTime(noise, now)
+    rattle.connect(rattleGain)
+    rattleGain.connect(modulated)
+    rattle.start(now)
+    rattle.stop(stopAt)
+  }
 }
 
 const PHASE_VIBRATION: Record<KegelPhase, number[]> = {
@@ -155,17 +195,17 @@ export function cuePhase(phase: KegelPhase, opts: CueOptions): void {
   if (opts.sound) {
     switch (phase) {
       case 'contract':
-        thump({ freq: 95, cutoff: 460, duration: 0.15, gain: 0.3 })
+        buzz({ freq: 205, duration: 0.16, gain: 0.26 })
         break
       case 'hold':
         // Apenas un roce: la fase de sostener no necesita marcarse fuerte.
-        thump({ freq: 80, cutoff: 240, duration: 0.06, gain: 0.1 })
+        buzz({ freq: 210, duration: 0.07, gain: 0.11 })
         break
       case 'release':
-        thump({ freq: 62, cutoff: 300, duration: 0.11, gain: 0.19 })
+        buzz({ freq: 155, duration: 0.14, gain: 0.19, modHz: 45 })
         break
       case 'rest':
-        thump({ freq: 55, cutoff: 220, duration: 0.09, gain: 0.11 })
+        buzz({ freq: 130, duration: 0.11, gain: 0.11, modHz: 38 })
         break
     }
   }
@@ -180,7 +220,16 @@ export function cuePhase(phase: KegelPhase, opts: CueOptions): void {
 export function pulseTick(intensity: number, opts: CueOptions): void {
   if (!opts.sound) return
   const v = Math.min(1, Math.max(0, intensity))
-  thump({ freq: 70 + v * 30, cutoff: 260 + v * 180, duration: 0.045, gain: 0.07 + v * 0.11 })
+  // 75ms de duración contra intervalos de 90–165ms: a intensidad alta los
+  // pulsos casi se tocan y el zumbido se vuelve continuo, a intensidad baja se
+  // separan. La densidad refuerza la rampa además de la cadencia.
+  buzz({
+    freq: 195 + v * 30,
+    duration: 0.075,
+    gain: 0.09 + v * 0.13,
+    modHz: 50 + v * 15,
+    modDepth: 0.5,
+  })
 }
 
 /**
@@ -195,15 +244,15 @@ export function pulseIntervalMs(intensity: number): number {
 }
 
 export function cueCountdown(opts: CueOptions): void {
-  if (opts.sound) thump({ freq: 110, cutoff: 520, duration: 0.09, gain: 0.22 })
+  if (opts.sound) buzz({ freq: 225, duration: 0.09, gain: 0.24, modHz: 60 })
   if (opts.vibration) vibrate([20])
 }
 
 export function cueFinish(opts: CueOptions): void {
   if (opts.sound) {
-    thump({ freq: 80, cutoff: 420, duration: 0.13, gain: 0.26 })
-    window.setTimeout(() => thump({ freq: 100, cutoff: 460, duration: 0.13, gain: 0.26 }), 170)
-    window.setTimeout(() => thump({ freq: 130, cutoff: 520, duration: 0.28, gain: 0.3 }), 340)
+    buzz({ freq: 165, duration: 0.14, gain: 0.26 })
+    window.setTimeout(() => buzz({ freq: 200, duration: 0.14, gain: 0.26 }), 170)
+    window.setTimeout(() => buzz({ freq: 240, duration: 0.3, gain: 0.3, modHz: 65 }), 340)
   }
   if (opts.vibration) vibrate([80, 60, 80, 60, 160])
 }
