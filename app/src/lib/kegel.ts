@@ -313,6 +313,35 @@ export function computeStreak(countsByDate: Record<string, number>, today: strin
   return streak
 }
 
+export const ADHERENCE_WINDOW_DAYS = 30
+
+export interface KegelStats {
+  trainingDays: number
+  sessions: number
+  streak: number
+  /** Porcentaje de días entrenados en la ventana de adherencia. */
+  adherencePercent: number
+}
+
+export function computeStats(countsByDate: Record<string, number>, today: string): KegelStats {
+  const entries = Object.entries(countsByDate).filter(([, n]) => n > 0)
+  const sessions = entries.reduce((sum, [, n]) => sum + n, 0)
+
+  let trainedInWindow = 0
+  const cursor = new Date(today + 'T00:00:00')
+  for (let i = 0; i < ADHERENCE_WINDOW_DAYS; i++) {
+    if ((countsByDate[toDateKey(cursor)] ?? 0) > 0) trainedInWindow++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  return {
+    trainingDays: entries.length,
+    sessions,
+    streak: computeStreak(countsByDate, today),
+    adherencePercent: Math.round((trainedInWindow / ADHERENCE_WINDOW_DAYS) * 100),
+  }
+}
+
 /**
  * Sugerimos subir de nivel con 10 de los últimos 14 días cumplidos: tolera
  * faltar algún día sin exigir una racha perfecta.

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import {
+  ADHERENCE_WINDOW_DAYS,
+  computeStats,
   computeStreak,
   DAILY_ROUTINE_GOAL,
   getLevel,
@@ -52,6 +54,7 @@ export default function Kegel() {
   const today = todayKey()
   const todayCount = countsByDate[today] ?? 0
   const streak = useMemo(() => computeStreak(countsByDate, today), [countsByDate, today])
+  const stats = useMemo(() => computeStats(countsByDate, today), [countsByDate, today])
 
   const suggestedLevel = useMemo(() => {
     if (!settings) return null
@@ -112,8 +115,8 @@ export default function Kegel() {
       <div className="flex flex-col gap-3 p-4">
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-xs text-gray-500">Hoy · nivel {level.label}</p>
-            {streak > 0 && <p className="text-xs text-cyan-400">🔥 {streak} días</p>}
+            <p className="text-sm text-gray-500">Hoy · nivel {level.label}</p>
+            {streak > 0 && <p className="text-sm text-cyan-400">🔥 {streak} días</p>}
           </div>
           <p className="mt-1 text-2xl font-bold text-gray-100">
             {todayCount}
@@ -139,7 +142,7 @@ export default function Kegel() {
         {suggestedLevel && (
           <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4">
             <p className="text-sm font-medium text-cyan-300">🚀 Venís cumpliendo la meta</p>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-sm text-gray-400">
               Cumpliste tu objetivo la mayoría de los últimos {LEVEL_UP_WINDOW_DAYS} días. ¿Subimos a{' '}
               {getLevel(suggestedLevel).label}?
             </p>
@@ -166,7 +169,7 @@ export default function Kegel() {
             className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 active:bg-amber-500/20"
           >
             <p className="text-sm font-medium text-amber-300">🏔️ Toca el test mensual</p>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-sm text-gray-400">
               {lastTest
                 ? `Pasaron ${daysBetween(lastTest.date, new Date())} días desde el último. Medí tu contracción máxima para ver el avance real.`
                 : 'Medí cuánto aguantás una contracción máxima. Es tu punto de partida.'}
@@ -176,12 +179,12 @@ export default function Kegel() {
 
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-xs text-gray-400 first-letter:uppercase">{monthLabel}</p>
-            <p className="text-[11px] text-gray-600">{DAILY_ROUTINE_GOAL} rutinas = día completo</p>
+            <p className="text-sm text-gray-400 first-letter:uppercase">{monthLabel}</p>
+            <p className="text-sm text-gray-600">{DAILY_ROUTINE_GOAL} rutinas = día completo</p>
           </div>
           <div className="mt-3 grid grid-cols-7 gap-1.5">
             {WEEKDAYS.map((d, i) => (
-              <span key={i} className="text-center text-[10px] text-gray-600">
+              <span key={i} className="text-center text-xs text-gray-600">
                 {d}
               </span>
             ))}
@@ -199,7 +202,7 @@ export default function Kegel() {
               return (
                 <span
                   key={key}
-                  className={`flex aspect-square items-center justify-center rounded-md text-[11px] ${fill} ${
+                  className={`flex aspect-square items-center justify-center rounded-md text-sm ${fill} ${
                     isToday ? 'ring-1 ring-cyan-400' : ''
                   }`}
                 >
@@ -212,24 +215,61 @@ export default function Kegel() {
 
         <div className="grid grid-cols-2 gap-3">
           <Link to="/kegel/progreso" className="rounded-xl bg-white/5 p-3 active:bg-white/10">
-            <p className="text-xs text-gray-400">📈 Progreso</p>
+            <p className="text-sm text-gray-400">📈 Progreso</p>
             <p className="mt-1 text-lg font-semibold text-gray-100">
               {lastTest ? lastTest.seconds : '—'}
-              <span className="ml-1 text-xs font-normal text-gray-500">s</span>
+              <span className="ml-1 text-sm font-normal text-gray-500">s</span>
             </p>
-            <p className="text-[11px] text-gray-500">contracción máxima</p>
+            <p className="text-sm text-gray-500">contracción máxima</p>
           </Link>
           <Link to="/kegel/test" className="rounded-xl bg-white/5 p-3 active:bg-white/10">
-            <p className="text-xs text-gray-400">🏔️ Test</p>
-            <p className="mt-1 text-lg font-semibold text-gray-100">{tests.length}</p>
-            <p className="text-[11px] text-gray-500">
-              {tests.length === 1 ? 'test hecho' : 'tests hechos'}
-            </p>
+            <p className="text-sm text-gray-400">🏔️ Test</p>
+            <p className="mt-1 text-lg font-semibold text-gray-100">Medir</p>
+            <p className="text-sm text-gray-500">contracción máxima</p>
           </Link>
         </div>
 
+        <div className="rounded-2xl bg-white/5 p-4">
+          <p className="text-lg font-bold text-gray-100">📋 Tu entrenamiento</p>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {[
+              { value: stats.trainingDays, label: 'Días entrenados' },
+              { value: stats.sessions, label: 'Rutinas totales' },
+              { value: stats.streak, label: 'Días seguidos' },
+              { value: tests.length, label: 'Tests hechos' },
+            ].map((tile) => (
+              <div key={tile.label} className="rounded-xl bg-white/5 p-4 text-center">
+                <p className="text-3xl font-bold text-white">{tile.value}</p>
+                <p className="mt-1 text-sm text-gray-400">{tile.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 rounded-xl bg-white/5 p-4">
+            <div className="flex items-baseline justify-between">
+              <p className="text-base text-gray-300">Días entrenados</p>
+              <p className="text-lg font-bold text-white">{stats.adherencePercent}%</p>
+            </div>
+            <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${stats.adherencePercent}%`,
+                  background: 'linear-gradient(to right, #0e7490, #22d3ee)',
+                }}
+              />
+            </div>
+            <div className="mt-1.5 flex justify-between text-sm text-gray-600">
+              <span>0</span>
+              <span>últimos {ADHERENCE_WINDOW_DAYS} días</span>
+              <span>100</span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-2">
-          <p className="px-1 text-xs text-gray-500">Ejercicios</p>
+          <p className="px-1 text-sm text-gray-500">Ejercicios</p>
           {KEGEL_EXERCISES.map((ex) => {
             const locked = getLevel(ex.minLevel).rank > level.rank
             return (
@@ -240,10 +280,10 @@ export default function Kegel() {
                 <span className="text-xl">{ex.icon}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-100">{ex.name}</p>
-                  <p className="text-xs text-gray-500">{ex.description}</p>
+                  <p className="text-sm text-gray-500">{ex.description}</p>
                 </div>
                 {locked && (
-                  <span className="shrink-0 text-[11px] text-gray-500">
+                  <span className="shrink-0 text-sm text-gray-500">
                     {getLevel(ex.minLevel).label}
                   </span>
                 )}
@@ -252,7 +292,7 @@ export default function Kegel() {
           })}
         </div>
 
-        <p className="px-1 text-[11px] leading-relaxed text-gray-600">
+        <p className="px-1 text-sm leading-relaxed text-gray-600">
           Los ejercicios de piso pélvico son seguros y de práctica habitual, pero si sentís dolor o molestia
           persistente, consultá con un kinesiólogo de piso pélvico. Esta app guía el ritmo, no reemplaza criterio
           clínico.

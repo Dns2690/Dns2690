@@ -142,7 +142,10 @@ export default function KegelSession() {
     }
 
     guideRef.current?.setIntensity(intensityAt(entry, elapsed))
-    guideRef.current?.setProgress(elapsed / totalMs)
+    // El anillo acompaña al número: ambos miden el bloque actual, no la rutina
+    // entera. El total va aparte, en "Queda X:XX".
+    const blockSpan = entry.blockEndMs - entry.blockStartMs
+    guideRef.current?.setProgress(blockSpan > 0 ? (elapsed - entry.blockStartMs) / blockSpan : 0)
 
     // El número grande cuenta el bloque entero del ejercicio (45s → 0), no cada
     // micro-fase: reiniciarlo en cada contracción distrae del ritmo. Las fases
@@ -261,15 +264,15 @@ export default function KegelSession() {
         <TopBar title="Rutina Kegel" back />
         <div className="flex flex-col gap-3 p-4">
           <div className="rounded-2xl bg-white/5 p-4 text-center">
-            <p className="text-xs text-gray-500">{level.label}</p>
+            <p className="text-sm text-gray-500">{level.label}</p>
             <p className="mt-1 text-3xl font-bold text-gray-100">{formatDuration(totalSeconds)}</p>
-            <p className="mt-1 text-xs text-gray-500">{exerciseIds.length} ejercicios al azar</p>
+            <p className="mt-1 text-sm text-gray-500">{exerciseIds.length} ejercicios al azar</p>
           </div>
 
           {restWarning && (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
               <p className="text-sm font-medium text-amber-300">🛋️ Descansá desde la rutina anterior</p>
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-sm text-gray-400">
                 Se recomienda esperar al menos {REST_BETWEEN_ROUTINES_HOURS} horas entre entrenamientos para
                 maximizar la eficacia y evitar sobrecargar el piso pélvico. Faltan{' '}
                 <span className="font-medium text-amber-300">{restWarning}</span>.
@@ -292,9 +295,9 @@ export default function KegelSession() {
                   <span className="text-xl">{ex.icon}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-100">{ex.name}</p>
-                    <p className="truncate text-xs text-gray-500">{ex.description}</p>
+                    <p className="truncate text-sm text-gray-500">{ex.description}</p>
                   </div>
-                  <span className="shrink-0 text-xs text-gray-500">×{repsFor(ex, level)}</span>
+                  <span className="shrink-0 text-sm text-gray-500">×{repsFor(ex, level)}</span>
                 </div>
               )
             })}
@@ -343,45 +346,45 @@ export default function KegelSession() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="px-4 pt-4 text-center">
-        <p className="text-sm text-gray-400">Seguí el ritmo y las señales</p>
+      <div className="px-4 pt-5 text-center">
+        <p className="text-lg text-gray-300">Seguí el ritmo y las señales</p>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef}>
-          <p className="text-6xl font-bold tabular-nums text-gray-100">{stepRemaining}</p>
-          <p className="mt-1 text-sm font-medium text-cyan-400">{current ? phaseLabel(current) : ''}</p>
+          <p className="text-7xl font-bold tabular-nums leading-none text-white">{stepRemaining}</p>
+          <p className="mt-2 text-xl font-semibold text-white">{current ? phaseLabel(current) : ''}</p>
         </KegelGuide>
 
-        <div className="mt-2 text-center">
-          <p className="text-base font-semibold text-gray-100">
+        <div className="mt-4 text-center">
+          <p className="text-xl font-bold text-gray-100">
             {isRest ? 'Descanso' : (currentExercise?.name ?? '')}
           </p>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-1 text-base text-gray-400">
             {isRest
               ? 'Preparate para el próximo ejercicio'
               : current
                 ? `Repetición ${current.repIndex + 1} de ${current.totalReps} · ejercicio ${current.exerciseIndex + 1}/${exerciseIds.length}`
                 : ''}
           </p>
-          <p className="mt-2 text-xs text-gray-600">Queda {formatDuration(totalRemaining)}</p>
+          <p className="mt-2 text-base text-gray-500">Queda {formatDuration(totalRemaining)}</p>
         </div>
       </div>
 
       {paused && (
-        <p className="pb-2 text-center text-xs text-amber-400">En pausa</p>
+        <p className="pb-2 text-center text-base font-medium text-amber-400">En pausa</p>
       )}
 
       <div className="flex gap-2 p-4">
         <button
           onClick={togglePause}
-          className="flex-1 rounded-lg bg-white/10 py-3 text-sm font-medium text-gray-100 active:bg-white/20"
+          className="flex-1 rounded-xl bg-white/10 py-4 text-lg font-semibold text-gray-100 active:bg-white/20"
         >
           {paused ? 'Reanudar' : 'Pausar'}
         </button>
         <button
           onClick={abandon}
-          className="flex-1 rounded-lg bg-red-500/90 py-3 text-sm font-medium text-white active:bg-red-500"
+          className="flex-1 rounded-xl bg-red-500/90 py-4 text-lg font-semibold text-white active:bg-red-500"
         >
           Terminar
         </button>

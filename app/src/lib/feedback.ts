@@ -57,31 +57,72 @@ export function closeAudio(): void {
   ctx = null
 }
 
-/** Barrido de frecuencia con envolvente suave, para que no chasquee. */
-function tone(fromHz: number, toHz: number, durationSec: number, peakGain = 0.18): void {
+let noiseBuffer: AudioBuffer | null = null
+
+function getNoise(context: AudioContext): AudioBuffer {
+  if (noiseBuffer) return noiseBuffer
+  const length = Math.floor(context.sampleRate * 0.4)
+  const buffer = context.createBuffer(1, length, context.sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1
+  noiseBuffer = buffer
+  return buffer
+}
+
+interface ThumpOptions {
+  /** Fundamental del cuerpo grave, en Hz. */
+  freq: number
+  /** Corte del filtro sobre el ruido: más bajo = más sordo. */
+  cutoff: number
+  duration: number
+  gain: number
+}
+
+/**
+ * Golpe sordo en vez de un pitido.
+ *
+ * Un barrido de seno agudo se lee como alarma y cansa en una sesión de varios
+ * minutos. Esto combina un ruido filtrado paso-bajo (la parte "táctil", que es
+ * lo que hace que se perciba como una vibración) con un seno grave que le da
+ * cuerpo. El ruido además se reproduce bien en el parlante del teléfono, que
+ * apenas responde por debajo de los 200 Hz.
+ */
+function thump({ freq, cutoff, duration, gain: peakGain }: ThumpOptions): void {
   if (!ctx || ctx.state === 'closed') return
-  // Red de seguridad: si el contexto quedó suspendido por el sistema, este tono
-  // se pierde igual, pero deja el contexto listo para los siguientes.
+  // Red de seguridad: si el contexto quedó suspendido por el sistema, este
+  // golpe se pierde igual, pero deja el contexto listo para los siguientes.
   if (ctx.state !== 'running') {
     void ctx.resume()
     return
   }
   const now = ctx.currentTime
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
 
-  osc.type = 'sine'
-  osc.frequency.setValueAtTime(fromHz, now)
-  if (toHz !== fromHz) osc.frequency.linearRampToValueAtTime(toHz, now + durationSec)
+  const envelope = ctx.createGain()
+  envelope.gain.setValueAtTime(0, now)
+  envelope.gain.linearRampToValueAtTime(peakGain, now + 0.008)
+  envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+  envelope.connect(ctx.destination)
 
-  gain.gain.setValueAtTime(0, now)
-  gain.gain.linearRampToValueAtTime(peakGain, now + 0.015)
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec)
+  const noise = ctx.createBufferSource()
+  noise.buffer = getNoise(ctx)
+  const lowpass = ctx.createBiquadFilter()
+  lowpass.type = 'lowpass'
+  lowpass.frequency.setValueAtTime(cutoff, now)
+  lowpass.Q.value = 0.7
+  noise.connect(lowpass)
+  lowpass.connect(envelope)
+  noise.start(now)
+  noise.stop(now + duration + 0.02)
 
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-  osc.start(now)
-  osc.stop(now + durationSec + 0.02)
+  const body = ctx.createOscillator()
+  body.type = 'sine'
+  body.frequency.setValueAtTime(freq, now)
+  const bodyGain = ctx.createGain()
+  bodyGain.gain.setValueAtTime(0.55, now)
+  body.connect(bodyGain)
+  bodyGain.connect(envelope)
+  body.start(now)
+  body.stop(now + duration + 0.02)
 }
 
 const PHASE_VIBRATION: Record<KegelPhase, number[]> = {
@@ -114,16 +155,17 @@ export function cuePhase(phase: KegelPhase, opts: CueOptions): void {
   if (opts.sound) {
     switch (phase) {
       case 'contract':
-        tone(440, 700, 0.22)
+        thump({ freq: 95, cutoff: 460, duration: 0.15, gain: 0.3 })
         break
       case 'hold':
-        tone(700, 700, 0.1, 0.1)
+        // Apenas un roce: la fase de sostener no necesita marcarse fuerte.
+        thump({ freq: 80, cutoff: 240, duration: 0.06, gain: 0.1 })
         break
       case 'release':
-        tone(700, 380, 0.26)
+        thump({ freq: 62, cutoff: 300, duration: 0.11, gain: 0.19 })
         break
       case 'rest':
-        tone(300, 300, 0.14, 0.09)
+        thump({ freq: 55, cutoff: 220, duration: 0.09, gain: 0.11 })
         break
     }
   }
@@ -131,15 +173,15 @@ export function cuePhase(phase: KegelPhase, opts: CueOptions): void {
 }
 
 export function cueCountdown(opts: CueOptions): void {
-  if (opts.sound) tone(520, 520, 0.09, 0.12)
+  if (opts.sound) thump({ freq: 110, cutoff: 520, duration: 0.09, gain: 0.22 })
   if (opts.vibration) vibrate([20])
 }
 
 export function cueFinish(opts: CueOptions): void {
   if (opts.sound) {
-    tone(523, 523, 0.16, 0.16)
-    window.setTimeout(() => tone(659, 659, 0.16, 0.16), 150)
-    window.setTimeout(() => tone(784, 784, 0.3, 0.18), 300)
+    thump({ freq: 80, cutoff: 420, duration: 0.13, gain: 0.26 })
+    window.setTimeout(() => thump({ freq: 100, cutoff: 460, duration: 0.13, gain: 0.26 }), 170)
+    window.setTimeout(() => thump({ freq: 130, cutoff: 520, duration: 0.28, gain: 0.3 }), 340)
   }
   if (opts.vibration) vibrate([80, 60, 80, 60, 160])
 }

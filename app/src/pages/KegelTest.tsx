@@ -132,7 +132,7 @@ export default function KegelTest() {
               Contraé el piso pélvico lo más fuerte que puedas y sostené <strong>todo el tiempo que aguantes</strong>.
               Cuando ya no puedas mantener la tensión, tocá <strong>Solté</strong>.
             </p>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-sm text-gray-500">
               Es la medición real de tu avance. Repetila una vez por mes, en condiciones parecidas: mismo momento del
               día y sin haber entrenado justo antes.
             </p>
@@ -140,7 +140,7 @@ export default function KegelTest() {
 
           {previous && (
             <div className="rounded-2xl bg-white/5 p-4 text-center">
-              <p className="text-xs text-gray-500">Tu último test</p>
+              <p className="text-sm text-gray-500">Tu último test</p>
               <p className="mt-1 text-2xl font-bold text-gray-100">
                 {previous.seconds}
                 <span className="ml-1 text-sm font-normal text-gray-500">s</span>
