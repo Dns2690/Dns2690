@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import FitnessHub from './pages/FitnessHub'
 import Mindfulness from './pages/Mindfulness'
 import MindfulnessSession from './pages/MindfulnessSession'
+import VoiceTest from './pages/VoiceTest'
 import Exercises from './pages/Exercises'
 import ExerciseDetail from './pages/ExerciseDetail'
 import Routines from './pages/Routines'
@@ -43,6 +44,7 @@ function Shell() {
           <Route path="/ejercicios/biblioteca" element={<Exercises />} />
           <Route path="/mindfulness" element={<Mindfulness />} />
           <Route path="/mindfulness/sesion" element={<MindfulnessSession />} />
+          <Route path="/mindfulness/voz" element={<VoiceTest />} />
           <Route path="/ejercicio/:id" element={<ExerciseDetail />} />
           <Route path="/programas" element={<ProgramsList />} />
           <Route path="/programas/:programId" element={<Program />} />

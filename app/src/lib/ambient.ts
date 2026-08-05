@@ -8,24 +8,31 @@ import { getAudioContext } from './feedback'
  * nunca y dura lo que dure la sesión.
  */
 
-export type AmbientKind = 'none' | 'drone' | 'rain' | 'waves'
+export type AmbientKind = 'none' | 'drone' | 'rain' | 'waves' | 'deep' | 'bowl' | 'fire'
 
 export const AMBIENTS: { id: AmbientKind; label: string; description: string }[] = [
-  { id: 'drone', label: 'Drone', description: 'Un acorde sostenido que va derivando' },
+  { id: 'deep', label: 'Profundo', description: 'Ruido marrón, grave y envolvente' },
+  { id: 'bowl', label: 'Cuenco', description: 'Cuenco tibetano sostenido' },
+  { id: 'fire', label: 'Fuego', description: 'Brasas con chisporroteo' },
   { id: 'rain', label: 'Lluvia', description: 'Ruido suave con densidad cambiante' },
   { id: 'waves', label: 'Olas', description: 'Respiración lenta del mar' },
+  { id: 'drone', label: 'Drone', description: 'Un acorde sostenido que va derivando' },
   { id: 'none', label: 'Silencio', description: 'Solo las campanas' },
 ]
 
-let noiseBuffer: AudioBuffer | null = null
+let pinkBuffer: AudioBuffer | null = null
+let brownBuffer: AudioBuffer | null = null
 
+/**
+ * Ruido rosa (Voss-McCartney simplificado). El blanco puro suena a estática de
+ * televisor; el rosa cae 3 dB por octava y se parece a lluvia o a mar, que es
+ * además el que mejor respaldo tiene en los estudios de sueño.
+ */
 function noise(ctx: AudioContext): AudioBuffer {
-  if (noiseBuffer && noiseBuffer.sampleRate === ctx.sampleRate) return noiseBuffer
+  if (pinkBuffer && pinkBuffer.sampleRate === ctx.sampleRate) return pinkBuffer
   const length = Math.floor(ctx.sampleRate * 4)
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
   const data = buffer.getChannelData(0)
-  // Ruido rosa aproximado (Voss-McCartney simplificado): el blanco puro suena
-  // a estática de televisor, el rosa se parece a lluvia.
   let b0 = 0, b1 = 0, b2 = 0
   for (let i = 0; i < length; i++) {
     const white = Math.random() * 2 - 1
@@ -34,7 +41,27 @@ function noise(ctx: AudioContext): AudioBuffer {
     b2 = 0.57 * b2 + white * 1.0526
     data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.2
   }
-  noiseBuffer = buffer
+  pinkBuffer = buffer
+  return buffer
+}
+
+/**
+ * Ruido marrón: cae 6 dB por octava, el doble de pronunciado que el rosa. Se
+ * obtiene integrando ruido blanco. Es el más grave de los tres y el que más
+ * suele elegirse para relajarse — suena a río lejano más que a estática.
+ */
+function brownNoise(ctx: AudioContext): AudioBuffer {
+  if (brownBuffer && brownBuffer.sampleRate === ctx.sampleRate) return brownBuffer
+  const length = Math.floor(ctx.sampleRate * 4)
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
+  const data = buffer.getChannelData(0)
+  let last = 0
+  for (let i = 0; i < length; i++) {
+    const white = Math.random() * 2 - 1
+    last = (last + 0.02 * white) / 1.02
+    data[i] = last * 3.2
+  }
+  brownBuffer = buffer
   return buffer
 }
 
@@ -137,6 +164,102 @@ function buildWaves(ctx: AudioContext, out: GainNode): Voice[] {
   return made
 }
 
+function buildDeep(ctx: AudioContext, out: GainNode): Voice[] {
+  const src = ctx.createBufferSource()
+  src.buffer = brownNoise(ctx)
+  src.loop = true
+
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.Q.value = 0.5
+  // Barrido muy lento y estrecho: da vida sin que se note el movimiento.
+  const made = [lfo(ctx, lp.frequency, 0.02, 180, 620)]
+
+  const gain = ctx.createGain()
+  made.push(lfo(ctx, gain.gain, 0.014, 0.05, 0.5))
+
+  src.connect(lp)
+  lp.connect(gain)
+  gain.connect(out)
+  src.start()
+  made.push({ stop: (at) => src.stop(at) })
+  return made
+}
+
+function buildBowl(ctx: AudioContext, out: GainNode): Voice[] {
+  // Parciales de un cuenco: como en la campana, no son armónicos enteros. Acá
+  // se sostienen en vez de apagarse, y el batido entre pares casi afinados
+  // produce el pulso lento característico.
+  const fundamental = 136.1 // "nota Om", habitual en cuencos
+  const partials = [
+    { ratio: 1, gain: 0.5, beat: 0.18 },
+    { ratio: 2.03, gain: 0.26, beat: 0.27 },
+    { ratio: 3.01, gain: 0.14, beat: 0.41 },
+    { ratio: 4.19, gain: 0.07, beat: 0.55 },
+  ]
+  const made: Voice[] = []
+  for (const p of partials) {
+    const osc = ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.value = fundamental * p.ratio
+    const g = ctx.createGain()
+    made.push(lfo(ctx, g.gain, p.beat, p.gain * 0.35, p.gain))
+    osc.connect(g)
+    g.connect(out)
+    osc.start()
+    made.push({ stop: (at) => osc.stop(at) })
+  }
+  return made
+}
+
+function buildFire(ctx: AudioContext, out: GainNode): Voice[] {
+  const made: Voice[] = []
+
+  // Base: el rumor grave de las brasas.
+  const src = ctx.createBufferSource()
+  src.buffer = brownNoise(ctx)
+  src.loop = true
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 450
+  const base = ctx.createGain()
+  made.push(lfo(ctx, base.gain, 0.11, 0.08, 0.28))
+  src.connect(lp)
+  lp.connect(base)
+  base.connect(out)
+  src.start()
+  made.push({ stop: (at) => src.stop(at) })
+
+  // Chisporroteos: ráfagas cortas a intervalos irregulares. La irregularidad es
+  // lo que lo hace creíble — a intervalo fijo suena a máquina.
+  let timer = 0
+  const crackle = () => {
+    const now = ctx.currentTime
+    const n = ctx.createBufferSource()
+    n.buffer = pinkBuffer ?? noise(ctx)
+    n.playbackRate.value = 1.5 + Math.random()
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 900 + Math.random() * 2200
+    bp.Q.value = 2 + Math.random() * 3
+    const g = ctx.createGain()
+    const dur = 0.02 + Math.random() * 0.05
+    g.gain.setValueAtTime(0, now)
+    g.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.14, now + 0.003)
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+    n.connect(bp)
+    bp.connect(g)
+    g.connect(out)
+    n.start(now)
+    n.stop(now + dur + 0.02)
+    timer = window.setTimeout(crackle, 90 + Math.random() * 700)
+  }
+  timer = window.setTimeout(crackle, 300)
+  made.push({ stop: () => window.clearTimeout(timer) })
+
+  return made
+}
+
 export function startAmbient(kind: AmbientKind, volume = 0.6): void {
   const ctx = getAudioContext()
   if (!ctx) return
@@ -150,9 +273,15 @@ export function startAmbient(kind: AmbientKind, volume = 0.6): void {
   master.gain.linearRampToValueAtTime(volume, ctx.currentTime + 3)
   master.connect(ctx.destination)
 
-  if (kind === 'drone') voices = buildDrone(ctx, master)
-  else if (kind === 'rain') voices = buildRain(ctx, master)
-  else voices = buildWaves(ctx, master)
+  const builders: Record<Exclude<AmbientKind, 'none'>, (c: AudioContext, o: GainNode) => Voice[]> = {
+    drone: buildDrone,
+    rain: buildRain,
+    waves: buildWaves,
+    deep: buildDeep,
+    bowl: buildBowl,
+    fire: buildFire,
+  }
+  voices = builders[kind](ctx, master)
 }
 
 export function stopAmbient(fadeSeconds = 2): void {

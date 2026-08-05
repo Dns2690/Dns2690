@@ -218,8 +218,19 @@ export default function Mindfulness() {
           </div>
         </div>
 
+        <Link
+          to="/mindfulness/voz"
+          className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4 active:bg-violet-500/20"
+        >
+          <p className="text-base font-medium text-violet-300">🎙️ Probar voz guiada</p>
+          <p className="mt-1 text-sm leading-relaxed text-gray-400">
+            Las fuentes se contradicen sobre si iOS permite hablar desde un temporizador. Esta prueba lo mide en tu
+            teléfono en 25 segundos.
+          </p>
+        </Link>
+
         <p className="px-1 text-sm leading-relaxed text-gray-600">
-          La guía es por texto y campanas, no por voz: en iPhone el navegador descarta el habla programada, así que
+          Por ahora la guía es por texto y campanas, no por voz: en iPhone el navegador descarta el habla programada, así que
           una voz narrada se cortaría a mitad de sesión. Leé la consigna, cerrá los ojos y dejá que las campanas
           marquen los cambios.
         </p>
