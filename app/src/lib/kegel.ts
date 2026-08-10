@@ -8,8 +8,8 @@ import type { KegelExercise, KegelLevel, KegelLevelId, KegelStep, KegelTimelineE
 
 export const KEGEL_LEVELS: KegelLevel[] = [
   { id: 'beginner', label: 'Principiante', workSeconds: 35, restSeconds: 5, exercises: 6, rank: 0 },
-  { id: 'medium', label: 'Medio', workSeconds: 45, restSeconds: 8, exercises: 8, rank: 1 },
-  { id: 'advanced', label: 'Avanzado', workSeconds: 55, restSeconds: 10, exercises: 10, rank: 2 },
+  { id: 'medium', label: 'Medio', workSeconds: 45, restSeconds: 8, exercises: 7, rank: 1 },
+  { id: 'advanced', label: 'Avanzado', workSeconds: 55, restSeconds: 10, exercises: 8, rank: 2 },
 ]
 
 export function getLevel(id: KegelLevelId): KegelLevel {
