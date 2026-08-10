@@ -30,7 +30,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'contract', seconds: 1, from: 0, to: 1 },
       { phase: 'hold', seconds: 3, from: 1, to: 1 },
       { phase: 'release', seconds: 1, from: 1, to: 0 },
-      { phase: 'rest', seconds: 2, from: 0, to: 0 },
     ],
   },
   {
@@ -70,7 +69,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
     pattern: [
       { phase: 'contract', seconds: 2, from: 0, to: 1 },
       { phase: 'release', seconds: 1, from: 1, to: 0 },
-      { phase: 'rest', seconds: 1, from: 0, to: 0 },
     ],
   },
   {
@@ -83,7 +81,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
     pattern: [
       { phase: 'contract', seconds: 1, from: 0, to: 1 },
       { phase: 'release', seconds: 2, from: 1, to: 0 },
-      { phase: 'rest', seconds: 1, from: 0, to: 0 },
     ],
   },
   {
@@ -123,7 +120,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'release', seconds: 2, from: 1, to: 0.66, label: '66%' },
       { phase: 'release', seconds: 2, from: 0.66, to: 0.33, label: '33%' },
       { phase: 'release', seconds: 2, from: 0.33, to: 0 },
-      { phase: 'rest', seconds: 2, from: 0, to: 0 },
     ],
   },
   {
@@ -152,7 +148,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'contract', seconds: 2, from: 0, to: 1 },
       { phase: 'hold', seconds: 3, from: 1, to: 1 },
       { phase: 'release', seconds: 2, from: 1, to: 0 },
-      { phase: 'rest', seconds: 4, from: 0, to: 0 },
     ],
   },
   {
@@ -166,7 +161,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'contract', seconds: 0.5, from: 0, to: 1 },
       { phase: 'hold', seconds: 2, from: 1, to: 1 },
       { phase: 'release', seconds: 1, from: 1, to: 0 },
-      { phase: 'rest', seconds: 3, from: 0, to: 0 },
     ],
   },
   {
@@ -180,7 +174,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'contract', seconds: 2, from: 0, to: 0.6, label: '60%' },
       { phase: 'hold', seconds: 15, from: 0.6, to: 0.6, label: '60%' },
       { phase: 'release', seconds: 2, from: 0.6, to: 0 },
-      { phase: 'rest', seconds: 10, from: 0, to: 0 },
     ],
   },
   {
@@ -200,7 +193,6 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
       { phase: 'release', seconds: 1.5, from: 0.75, to: 0.5, label: '50%' },
       { phase: 'release', seconds: 1.5, from: 0.5, to: 0.25, label: '25%' },
       { phase: 'release', seconds: 1.5, from: 0.25, to: 0 },
-      { phase: 'rest', seconds: 3, from: 0, to: 0 },
     ],
   },
 ]
