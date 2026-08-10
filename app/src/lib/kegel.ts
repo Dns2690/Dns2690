@@ -7,9 +7,9 @@ import type { KegelExercise, KegelLevel, KegelLevelId, KegelStep, KegelTimelineE
  */
 
 export const KEGEL_LEVELS: KegelLevel[] = [
-  { id: 'beginner', label: 'Principiante', workSeconds: 35, restSeconds: 5, rank: 0 },
-  { id: 'medium', label: 'Medio', workSeconds: 45, restSeconds: 8, rank: 1 },
-  { id: 'advanced', label: 'Avanzado', workSeconds: 55, restSeconds: 10, rank: 2 },
+  { id: 'beginner', label: 'Principiante', workSeconds: 35, restSeconds: 5, exercises: 6, rank: 0 },
+  { id: 'medium', label: 'Medio', workSeconds: 45, restSeconds: 8, exercises: 8, rank: 1 },
+  { id: 'advanced', label: 'Avanzado', workSeconds: 55, restSeconds: 10, exercises: 10, rank: 2 },
 ]
 
 export function getLevel(id: KegelLevelId): KegelLevel {
@@ -219,7 +219,10 @@ export function exercisePool(levelId: KegelLevelId): KegelExercise[] {
   return KEGEL_EXERCISES.filter((e) => getLevel(e.minLevel).rank <= rank)
 }
 
-export const EXERCISES_PER_ROUTINE = 6
+/** Cuántos ejercicios trae la rutina, según el nivel. */
+export function exercisesPerRoutine(levelId: KegelLevelId): number {
+  return getLevel(levelId).exercises
+}
 
 /** 6 ejercicios al azar del pool del nivel, sin repetir dentro de la rutina. */
 export function generateRoutine(levelId: KegelLevelId): string[] {
@@ -228,7 +231,7 @@ export function generateRoutine(levelId: KegelLevelId): string[] {
     const j = Math.floor(Math.random() * (i + 1))
     ;[pool[i], pool[j]] = [pool[j], pool[i]]
   }
-  return pool.slice(0, EXERCISES_PER_ROUTINE).map((e) => e.id)
+  return pool.slice(0, exercisesPerRoutine(levelId)).map((e) => e.id)
 }
 
 /**

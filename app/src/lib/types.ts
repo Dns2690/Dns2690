@@ -159,6 +159,8 @@ export interface KegelLevel {
   label: string
   workSeconds: number
   restSeconds: number
+  /** Cuántos ejercicios entran en una rutina de este nivel. */
+  exercises: number
   rank: number
 }
 

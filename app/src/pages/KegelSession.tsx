@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
+import SessionStrip, { type StripItem } from '../components/SessionStrip'
 import {
   buildTimeline,
   exerciseMode,
@@ -310,8 +311,22 @@ export default function KegelSession() {
   }
 
   const level = getLevel(settings.levelId)
-  const demoExercise = exerciseId ? getExercise(exerciseId) : undefined
+
   const current = timeline[entryIndex]
+  const stripItems: StripItem[] = []
+  exerciseIds.forEach((id, i) => {
+    if (i > 0) stripItems.push({ label: 'Descanso', isRest: true })
+    stripItems.push({ label: getExercise(id)?.name ?? id, isRest: false })
+  })
+  // Los descansos ocupan las posiciones impares, así que el índice del tramo en
+  // curso sale del índice de ejercicio y de si estamos en su descanso previo.
+  const stripIndex = current
+    ? current.kind === 'interRest'
+      ? current.exerciseIndex * 2 + 1
+      : current.exerciseIndex * 2
+    : 0
+
+  const demoExercise = exerciseId ? getExercise(exerciseId) : undefined
   const currentExercise = current ? getExercise(current.exerciseId) : undefined
 
   if (stage === 'loading') {
@@ -430,7 +445,13 @@ export default function KegelSession() {
 
   return (
     <div className="pt-safe flex flex-1 flex-col">
-      <div className="px-4 pt-5 text-center">
+      {stripItems.length > 1 && (
+        <div className="pt-3">
+          <SessionStrip items={stripItems} activeIndex={stripIndex} />
+        </div>
+      )}
+
+      <div className="px-4 pt-2 text-center">
         <p className="text-lg text-gray-300">Seguí el ritmo y las señales</p>
       </div>
 
