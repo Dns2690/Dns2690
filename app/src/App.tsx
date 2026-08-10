@@ -30,10 +30,13 @@ import Profile from './pages/Profile'
 // Las sesiones guiadas van a pantalla completa: el menú distrae del ritmo y
 // facilita salirse de la rutina sin querer.
 const IMMERSIVE_ROUTES = ['/kegel/rutina', '/kegel/test', '/mindfulness/sesion']
+const IMMERSIVE_PREFIXES = ['/kegel/demo/']
 
 function Shell() {
   const { pathname } = useLocation()
-  const immersive = IMMERSIVE_ROUTES.includes(pathname)
+  const immersive =
+    IMMERSIVE_ROUTES.includes(pathname) ||
+    IMMERSIVE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
   return (
     <>
@@ -62,6 +65,7 @@ function Shell() {
           <Route path="/medidas/:id" element={<MeasurementForm />} />
           <Route path="/kegel" element={<Kegel />} />
           <Route path="/kegel/rutina" element={<KegelSession />} />
+          <Route path="/kegel/demo/:exerciseId" element={<KegelSession />} />
           <Route path="/kegel/test" element={<KegelTest />} />
           <Route path="/kegel/progreso" element={<KegelTrend />} />
           <Route path="/ajustes" element={<Profile />} />

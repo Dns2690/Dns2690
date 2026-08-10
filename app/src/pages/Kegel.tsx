@@ -269,26 +269,33 @@ export default function Kegel() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="px-1 text-sm text-gray-500">Ejercicios</p>
+          <p className="px-1 text-sm text-gray-500">Ejercicios · tocá uno para probarlo solo</p>
           {KEGEL_EXERCISES.map((ex) => {
             const locked = getLevel(ex.minLevel).rank > level.rank
-            return (
-              <div
-                key={ex.id}
-                className={`flex items-center gap-3 rounded-xl bg-white/5 p-3 ${locked ? 'opacity-50' : ''}`}
-              >
-                <span className="text-xl">{ex.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-100">{ex.name}</p>
-                  <p className="text-sm text-gray-500">{ex.description}</p>
-                </div>
-                {locked && (
-                  <span className="shrink-0 text-sm text-gray-500">
-                    {getLevel(ex.minLevel).label}
-                  </span>
-                )}
-              </div>
-            )
+              return (
+                // Tocar un ejercicio lo corre solo, en nivel Principiante. Sirve
+                // para depurarlos de a uno, así que los bloqueados también se
+                // pueden probar.
+                <Link
+                  key={ex.id}
+                  to={`/kegel/demo/${ex.id}`}
+                  className="flex items-center gap-3 rounded-xl bg-white/5 p-3 active:bg-white/10"
+                >
+                  <span className={`text-xl ${locked ? 'opacity-50' : ''}`}>{ex.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-sm font-medium text-gray-100">{ex.name}</p>
+                      {locked && (
+                        <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-xs text-gray-400">
+                          {getLevel(ex.minLevel).label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">{ex.description}</p>
+                  </div>
+                  <span className="shrink-0 text-sm text-rose-400">Probar</span>
+                </Link>
+              )
           })}
         </div>
 

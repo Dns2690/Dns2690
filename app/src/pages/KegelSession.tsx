@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
 import {
@@ -37,6 +37,11 @@ const DEFAULT_SETTINGS: KegelSettings = { levelId: 'beginner', sound: true, vibr
 
 export default function KegelSession() {
   const navigate = useNavigate()
+  // Con `exerciseId` en la ruta corre un solo ejercicio, siempre en nivel
+  // Principiante: es un banco de pruebas para depurarlos de a uno, así que no
+  // cuenta como rutina ni respeta el descanso entre sesiones.
+  const { exerciseId } = useParams()
+  const isDemo = !!exerciseId
   const guideRef = useRef<KegelGuideHandle>(null)
 
   const [stage, setStage] = useState<Stage>('loading')
@@ -75,9 +80,9 @@ export default function KegelSession() {
       const [stored, sessions] = await Promise.all([getKegelSettings(), listKegelSessions()])
       if (!alive) return
       const active = stored ?? DEFAULT_SETTINGS
-      setSettings(active)
+      setSettings(isDemo ? { ...active, levelId: 'beginner' } : active)
 
-      const last = sessions[0]
+      const last = isDemo ? undefined : sessions[0]
       if (last) {
         const elapsedMs = Date.now() - new Date(last.completedAt).getTime()
         const requiredMs = REST_BETWEEN_ROUTINES_HOURS * 3600_000
@@ -89,9 +94,10 @@ export default function KegelSession() {
         }
       }
 
-      const ids = generateRoutine(active.levelId)
+      const levelForRun = isDemo ? 'beginner' : active.levelId
+      const ids = isDemo ? [exerciseId!] : generateRoutine(active.levelId)
       setExerciseIds(ids)
-      const built = buildTimeline(ids, active.levelId)
+      const built = buildTimeline(ids, levelForRun)
       setTimeline(built)
       timelineRef.current = built
       setTotalRemaining(Math.round(timelineDurationMs(built) / 1000))
@@ -116,6 +122,12 @@ export default function KegelSession() {
     cueFinish(settingsRef.current)
     void releaseWakeLock()
 
+    // La demo no se registra: falsearía la meta diaria y la racha.
+    if (isDemo) {
+      setStage('done')
+      return
+    }
+
     const durationSeconds = Math.round(timelineDurationMs(timelineRef.current) / 1000)
     await saveKegelSession({
       date: todayKey(),
@@ -125,7 +137,7 @@ export default function KegelSession() {
       durationSeconds,
     })
     setStage('done')
-  }, [exerciseIds, stopLoop])
+  }, [exerciseIds, stopLoop, isDemo])
 
   const frame = useCallback(() => {
     const tl = timelineRef.current
@@ -291,20 +303,21 @@ export default function KegelSession() {
   }
 
   function abandon() {
-    if (!confirm('¿Terminar la rutina? No se va a registrar.')) return
+    if (!confirm(isDemo ? '¿Cortar la demo?' : '¿Terminar la rutina? No se va a registrar.')) return
     stopLoop()
     void releaseWakeLock()
     navigate('/kegel')
   }
 
   const level = getLevel(settings.levelId)
+  const demoExercise = exerciseId ? getExercise(exerciseId) : undefined
   const current = timeline[entryIndex]
   const currentExercise = current ? getExercise(current.exerciseId) : undefined
 
   if (stage === 'loading') {
     return (
       <div className="pt-safe flex flex-1 flex-col">
-        <TopBar title="Rutina Kegel" back />
+        <TopBar title={isDemo ? 'Demo' : 'Rutina Kegel'} back />
         <p className="p-6 text-center text-sm text-gray-500">Preparando…</p>
       </div>
     )
@@ -314,13 +327,29 @@ export default function KegelSession() {
     const totalSeconds = Math.round(timelineDurationMs(timeline) / 1000)
     return (
       <div className="flex flex-1 flex-col pb-6">
-        <TopBar title="Rutina Kegel" back />
+        <TopBar title={isDemo ? 'Demo' : 'Rutina Kegel'} back />
         <div className="flex flex-col gap-3 p-4">
+          {isDemo ? (
+            <div className="rounded-2xl bg-rose-500/10 p-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{demoExercise?.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg font-bold text-gray-100">{demoExercise?.name}</p>
+                  <p className="text-sm text-rose-300">
+                    Demo · {formatDuration(totalSeconds)} · nivel {level.label}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 text-base leading-relaxed text-gray-300">{demoExercise?.description}</p>
+              <p className="mt-2 text-sm text-gray-500">No cuenta para tu meta diaria ni para la racha.</p>
+            </div>
+          ) : (
           <div className="rounded-2xl bg-white/5 p-4 text-center">
             <p className="text-sm text-gray-500">{level.label}</p>
             <p className="mt-1 text-3xl font-bold text-gray-100">{formatDuration(totalSeconds)}</p>
             <p className="mt-1 text-sm text-gray-500">{exerciseIds.length} ejercicios al azar</p>
           </div>
+          )}
 
           {restWarning && (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
@@ -339,7 +368,7 @@ export default function KegelSession() {
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
+          <div className={`flex-col gap-2 ${isDemo ? 'hidden' : 'flex'}`}>
             {exerciseIds.map((id, i) => {
               const ex = getExercise(id)
               if (!ex) return null
@@ -360,7 +389,7 @@ export default function KegelSession() {
             onClick={beginCountdown}
             className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
           >
-            {restWarning ? 'Entrenar igual' : 'Empezar'}
+            {isDemo ? 'Probar' : restWarning ? 'Entrenar igual' : 'Empezar'}
           </button>
         </div>
       </div>
@@ -379,8 +408,10 @@ export default function KegelSession() {
   if (stage === 'done') {
     return (
       <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-5xl">✅</p>
-        <p className="text-xl font-semibold text-gray-100">Rutina completada</p>
+        <p className="text-5xl">{isDemo ? '🔍' : '✅'}</p>
+        <p className="text-xl font-semibold text-gray-100">
+          {isDemo ? `Demo de ${demoExercise?.name ?? ''}` : 'Rutina completada'}
+        </p>
         <p className="text-sm text-gray-500">
           {exerciseIds.length} ejercicios · {formatDuration(Math.round(timelineDurationMs(timeline) / 1000))} ·{' '}
           {level.label}
