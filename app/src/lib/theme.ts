@@ -105,6 +105,7 @@ export function moduleForPath(pathname: string): ModuleId | null {
     pathname.startsWith('/ejercicio/') ||
     pathname.startsWith('/programas') ||
     pathname.startsWith('/rutinas') ||
+    pathname.startsWith('/plan') ||
     pathname.startsWith('/entrenar') ||
     pathname.startsWith('/historial')
   ) {

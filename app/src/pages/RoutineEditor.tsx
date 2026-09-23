@@ -5,6 +5,7 @@ import ExercisePicker from '../components/ExercisePicker'
 import Icon from '../components/Icon'
 import { Button, Placeholder, Row, Section } from '../components/ui'
 import { getExercise, imageUrl } from '../lib/exercises'
+import { DEFAULT_REST_SECONDS } from '../lib/workout'
 import {
   deleteRoutine,
   deleteRoutineDraft,
@@ -102,7 +103,7 @@ export default function RoutineEditor() {
   }
 
   function addExercise(exerciseId: string) {
-    setItems((prev) => [...prev, { exerciseId, targetSets: 3, targetReps: '10-12' }])
+    setItems((prev) => [...prev, { exerciseId, targetSets: 3, targetReps: '10-12', restSeconds: DEFAULT_REST_SECONDS }])
     closePicker()
   }
 
@@ -210,6 +211,20 @@ export default function RoutineEditor() {
                       className={`w-16 ${fieldClass}`}
                     />
                     <span>reps</span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[15px] text-label-2">
+                    <span>Descanso</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={15}
+                      value={it.restSeconds ?? DEFAULT_REST_SECONDS}
+                      onChange={(e) => updateItem(i, { restSeconds: Math.max(0, Number(e.target.value) || 0) })}
+                      aria-label="Descanso en segundos"
+                      className={`w-14 ${fieldClass}`}
+                    />
+                    <span>s</span>
                   </div>
                 </div>
                 <button

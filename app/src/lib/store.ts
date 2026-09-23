@@ -9,6 +9,7 @@ import type {
   Profile,
   Routine,
   RoutineDraft,
+  TrainingPlan,
   WorkoutSession,
 } from './types'
 
@@ -16,6 +17,7 @@ export const store = createStore('mis-ejercicios', 'data')
 
 const ROUTINE_PREFIX = 'routine:'
 const ROUTINE_DRAFT_PREFIX = 'routinedraft:'
+const PLAN_PREFIX = 'plan:'
 const SESSION_PREFIX = 'session:'
 const MEASUREMENT_PREFIX = 'measurement:'
 const KEGEL_SESSION_PREFIX = 'kegelsession:'
@@ -204,4 +206,39 @@ export async function getProfile(): Promise<Profile | undefined> {
 
 export async function saveProfile(profile: Profile): Promise<void> {
   await set(PROFILE_KEY, profile, store)
+}
+
+export async function listPlans(): Promise<TrainingPlan[]> {
+  const allKeys = (await keys(store)) as string[]
+  const plans = await Promise.all(
+    allKeys.filter((k) => k.startsWith(PLAN_PREFIX)).map((k) => get<TrainingPlan>(k, store)),
+  )
+  return plans.filter((p): p is TrainingPlan => !!p).sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+}
+
+/** El plan en curso. Hay uno solo a la vez: guardar uno nuevo cierra el anterior. */
+export async function getActivePlan(): Promise<TrainingPlan | undefined> {
+  return (await listPlans()).find((p) => p.endedAt === null)
+}
+
+export async function savePlan(
+  plan: Omit<TrainingPlan, 'id' | 'startedAt' | 'endedAt'> & Partial<Pick<TrainingPlan, 'id' | 'startedAt' | 'endedAt'>>,
+): Promise<TrainingPlan> {
+  const full: TrainingPlan = {
+    ...plan,
+    id: plan.id ?? uid(),
+    startedAt: plan.startedAt ?? new Date().toISOString(),
+    endedAt: plan.endedAt ?? null,
+  }
+  if (full.endedAt === null) {
+    // Un solo plan activo: si había otro, queda cerrado en este momento.
+    const now = new Date().toISOString()
+    for (const other of await listPlans()) {
+      if (other.id !== full.id && other.endedAt === null) {
+        await set(PLAN_PREFIX + other.id, { ...other, endedAt: now }, store)
+      }
+    }
+  }
+  await set(PLAN_PREFIX + full.id, full, store)
+  return full
 }

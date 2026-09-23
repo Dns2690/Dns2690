@@ -26,6 +26,8 @@ import KegelSession from './pages/KegelSession'
 import KegelTest from './pages/KegelTest'
 import KegelTrend from './pages/KegelTrend'
 import Profile from './pages/Profile'
+import Plan from './pages/Plan'
+import PlanEditor from './pages/PlanEditor'
 
 // Las sesiones guiadas van a pantalla completa: el menú distrae del ritmo y
 // facilita salirse de la rutina sin querer.
@@ -57,6 +59,9 @@ function Shell() {
           <Route path="/programas/:programId" element={<Program />} />
           <Route path="/programas/:programId/mes/:month" element={<ProgramMonth />} />
           <Route path="/rutinas" element={<Routines />} />
+          <Route path="/plan" element={<Plan />} />
+          <Route path="/plan/nuevo" element={<PlanEditor mode="new" />} />
+          <Route path="/plan/editar" element={<PlanEditor mode="edit" />} />
           <Route path="/rutinas/nueva" element={<RoutineEditor />} />
           <Route path="/rutinas/:id" element={<RoutineEditor />} />
           <Route path="/entrenar" element={<Workout />} />

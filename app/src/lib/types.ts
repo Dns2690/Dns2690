@@ -25,6 +25,8 @@ export interface RoutineExercise {
   exerciseId: string
   targetSets: number
   targetReps: string
+  /** Descanso entre series. Las rutinas viejas no lo tienen: vale 90 s. */
+  restSeconds?: number
   notes?: string
 }
 
@@ -60,6 +62,11 @@ export interface SessionExercise {
   targetReps?: string
   restSeconds?: number
   note?: string
+  /**
+   * Qué hizo con la sugerencia de subir el peso. Se guarda la decisión y no la
+   * sugerencia: la sugerencia se recalcula del historial, la decisión no.
+   */
+  loadChoice?: 'accept' | 'ignore'
 }
 
 export interface ProgramSessionMeta {
@@ -108,6 +115,25 @@ export interface ProgramInfo {
   icon: IconName
   equipment: string
   months: ProgramMonth[]
+}
+
+/**
+ * Plan personal: rutinas propias en rotación, con una meta de sesiones por
+ * semana y una duración en semanas (un bloque).
+ *
+ * La rotación no va atada a días de la semana: siempre toca la rutina que
+ * sigue a la última que hiciste, entrenes el día que entrenes.
+ */
+export interface TrainingPlan {
+  id: string
+  name: string
+  /** Rutinas en el orden de la rotación. */
+  routineIds: string[]
+  perWeek: number
+  weeks: number
+  startedAt: string
+  /** null mientras el plan está activo. */
+  endedAt: string | null
 }
 
 export interface MeasurementComputed {

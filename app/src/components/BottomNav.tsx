@@ -20,7 +20,7 @@ interface NavItem {
  */
 const items: NavItem[] = [
   { to: '/', label: 'Ejercicios', icon: 'dumbbell', owns: ['/biblioteca', '/ejercicio/', '/programas', '/historial'] },
-  { to: '/rutinas', label: 'Rutinas', icon: 'list', owns: [] },
+  { to: '/rutinas', label: 'Rutinas', icon: 'list', owns: ['/plan'] },
   { to: '/entrenar', label: 'Entrenar', icon: 'stopwatch', owns: [] },
   { to: '/bienestar', label: 'Bienestar', icon: 'leaf', owns: ['/kegel', '/mindfulness'] },
 ]

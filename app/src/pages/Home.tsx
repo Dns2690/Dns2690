@@ -19,6 +19,9 @@ import TopBar from '../components/TopBar'
 import Icon, { IconTile } from '../components/Icon'
 import ConsistencyStrip from '../components/ConsistencyStrip'
 import { Avatar, Button, Placeholder, Row, Section, Stat } from '../components/ui'
+import { WeekDots } from '../components/PlanSummary'
+import { useActivePlan } from '../lib/usePlan'
+import type { IconName } from '../components/Icon'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -43,6 +46,7 @@ export default function Home() {
   const [activity, setActivity] = useState<ActivityByDate | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
+  const planState = useActivePlan()
 
   useEffect(() => {
     let alive = true
@@ -118,33 +122,67 @@ export default function Home() {
   const openSession = sessions.find((s) => !s.finishedAt)
   const finishedCount = sessions.filter((s) => s.finishedAt).length
 
-  /** Lo que la app propone hacer ahora mismo. */
-  const next = openSession
+  /**
+   * Lo que la app propone hacer ahora mismo, en este orden: terminar lo que
+   * quedó abierto, la rutina que toca del plan propio, el día del programa en
+   * curso, o elegir por dónde arrancar.
+   */
+  interface NextUp {
+    icon: IconName
+    kicker: string
+    title: string
+    cta: string
+    to?: string
+    onClick?: () => void
+    percent: number | null
+    week?: { done: number; goal: number }
+  }
+  const { plan, progress: planProg, nextRoutine } = planState
+  const next: NextUp = openSession
     ? {
         to: `/entrenar/${openSession.id}`,
-        icon: 'stopwatch' as const,
+        icon: 'stopwatch',
         kicker: 'Sesión sin terminar',
         title: openSession.routineName || 'Sesión libre',
         cta: 'Seguir entrenando',
         percent: null,
       }
-    : activeProgram
+    : plan && planProg && planProg.finished
       ? {
-          to: `/programas/${activeProgram.id}/mes/${activeProgram.month}`,
-          icon: 'target' as const,
-          kicker: activeProgram.name,
-          title: `Mes ${activeProgram.month} · Día ${activeProgram.day}`,
-          cta: 'Ver la sesión',
-          percent: activeProgram.percent,
+          to: '/plan',
+          icon: 'trophy',
+          kicker: `${plan.name} · bloque terminado`,
+          title: 'Mirá cuánto subiste',
+          cta: 'Ver resultados',
+          percent: planProg.percent,
         }
-      : {
-          to: '/programas',
-          icon: 'target' as const,
-          kicker: 'Sin programa empezado',
-          title: 'Elegí por dónde arrancar',
-          cta: 'Ver programas',
-          percent: null,
-        }
+      : plan && planProg && nextRoutine
+        ? {
+            onClick: () => void planState.startNext(),
+            icon: 'calendar',
+            kicker: `${plan.name} · semana ${planProg.currentWeek} de ${plan.weeks}`,
+            title: nextRoutine.name,
+            cta: `Empezar ${nextRoutine.name}`,
+            percent: null,
+            week: { done: planProg.thisWeek, goal: plan.perWeek },
+          }
+        : activeProgram
+          ? {
+              to: `/programas/${activeProgram.id}/mes/${activeProgram.month}`,
+              icon: 'target',
+              kicker: activeProgram.name,
+              title: `Mes ${activeProgram.month} · Día ${activeProgram.day}`,
+              cta: 'Ver la sesión',
+              percent: activeProgram.percent,
+            }
+          : {
+              to: '/programas',
+              icon: 'target',
+              kicker: 'Sin programa empezado',
+              title: 'Elegí por dónde arrancar',
+              cta: 'Ver programas',
+              percent: null,
+            }
 
   const wellnessStatus = [
     `Kegel ${kegelToday}/${DAILY_ROUTINE_GOAL}`,
@@ -169,7 +207,17 @@ export default function Home() {
                 <div className="h-1.5 overflow-hidden rounded-full bg-cell-2">
                   <div className="h-full rounded-full bg-fit-500" style={{ width: `${next.percent}%` }} />
                 </div>
-                <p className="mt-1.5 text-[13px] text-label-2">{next.percent}% del programa</p>
+                <p className="mt-1.5 text-[13px] text-label-2">
+                  {next.percent}% del {plan && planProg?.finished ? 'bloque' : 'programa'}
+                </p>
+              </div>
+            )}
+            {next.week && (
+              <div className="mt-3 flex items-center gap-3">
+                <WeekDots done={next.week.done} goal={next.week.goal} />
+                <span className="text-[15px] text-label-2">
+                  {next.week.done} de {next.week.goal} esta semana
+                </span>
               </div>
             )}
             {workoutToday > 0 && (
@@ -179,7 +227,7 @@ export default function Home() {
               </p>
             )}
             <div className="mt-4">
-              <Button to={next.to} icon={openSession ? 'play' : undefined}>
+              <Button to={next.to} onClick={next.onClick} icon={openSession || next.onClick ? 'play' : undefined}>
                 {next.cta}
               </Button>
             </div>

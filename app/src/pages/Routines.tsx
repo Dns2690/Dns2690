@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import TopBar, { BarButton } from '../components/TopBar'
 import Icon, { IconTile } from '../components/Icon'
-import { Button, Placeholder, Section } from '../components/ui'
+import { Button, Placeholder, Row, Section } from '../components/ui'
+import PlanSummary from '../components/PlanSummary'
+import { useActivePlan } from '../lib/usePlan'
 import { listRoutines } from '../lib/store'
 import type { Routine } from '../lib/types'
 
@@ -12,6 +14,7 @@ import type { Routine } from '../lib/types'
  */
 export default function Routines() {
   const [routines, setRoutines] = useState<Routine[] | null>(null)
+  const planState = useActivePlan()
 
   useEffect(() => {
     listRoutines().then(setRoutines)
@@ -38,8 +41,22 @@ export default function Routines() {
         </div>
       )}
 
+      {routines && routines.length > 0 && !planState.loading && (
+        <div className="mb-7">
+          {planState.plan ? (
+            <div className="px-4">
+              <PlanSummary state={planState} />
+            </div>
+          ) : (
+            <Section footer="Poné tus rutinas en rotación con una meta semanal: la app te dice cuál toca y cómo venís.">
+              <Row to="/plan/nuevo" icon="calendar" title="Armar mi plan" subtitle="Rotación, meta semanal y seguimiento" />
+            </Section>
+          )}
+        </div>
+      )}
+
       {routines && routines.length > 0 && (
-        <Section>
+        <Section header={planState.plan ? 'Todas tus rutinas' : undefined}>
           {routines.map((r) => (
             <div key={r.id} className="flex items-center gap-3 pr-4" style={{ ['--sep-inset' as string]: '58px' }}>
               <Link to={`/rutinas/${r.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 active:opacity-60">

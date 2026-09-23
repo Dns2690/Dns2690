@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import Icon, { IconTile } from '../components/Icon'
 import { Button, Placeholder, Row, Section } from '../components/ui'
+import PlanSummary from '../components/PlanSummary'
+import { useActivePlan } from '../lib/usePlan'
 import { listRoutines, listSessions } from '../lib/store'
 import { startSession, startSessionFromRoutine } from '../lib/workout'
 import type { Routine, WorkoutSession } from '../lib/types'
@@ -13,6 +15,7 @@ export default function Workout() {
   const [routines, setRoutines] = useState<Routine[]>([])
   const [active, setActive] = useState<WorkoutSession | null | undefined>(undefined)
   const [starting, setStarting] = useState(false)
+  const planState = useActivePlan()
 
   useEffect(() => {
     listRoutines().then(setRoutines)
@@ -70,6 +73,13 @@ export default function Workout() {
                 </Button>
               </div>
             </div>
+          </div>
+        ) : planState.plan ? (
+          <div className="flex flex-col gap-3 px-4">
+            <PlanSummary state={planState} />
+            <Button variant="tinted" icon="plus" onClick={handleFreeform}>
+              Entrenamiento libre
+            </Button>
           </div>
         ) : (
           <div className="px-4">

@@ -3,6 +3,12 @@ import { getProgramDay, getProgramMonth } from './program'
 import { getProgramInfo } from '../data/programs'
 import type { Routine, SessionExercise, SetLog, WorkoutSession } from './types'
 
+/**
+ * Descanso entre series cuando la rutina no dice otro: 90 s es lo habitual para
+ * hipertrofia. Las rutinas creadas antes de que existiera el campo lo toman.
+ */
+export const DEFAULT_REST_SECONDS = 90
+
 function emptySets(count: number): SetLog[] {
   return Array.from({ length: count }, (_, i) => ({
     setNumber: i + 1,
@@ -23,6 +29,7 @@ export async function startSession(routine?: Routine): Promise<WorkoutSession> {
     exerciseId: re.exerciseId,
     sets: emptySets(re.targetSets),
     targetReps: re.targetReps,
+    restSeconds: re.restSeconds ?? DEFAULT_REST_SECONDS,
   }))
 
   const session: WorkoutSession = {
@@ -67,7 +74,7 @@ export async function startProgramSession(programId: string, month: number, day:
 export function addExerciseToSession(session: WorkoutSession, exerciseId: string): WorkoutSession {
   return {
     ...session,
-    exercises: [...session.exercises, { exerciseId, sets: emptySets(3) }],
+    exercises: [...session.exercises, { exerciseId, sets: emptySets(3), restSeconds: DEFAULT_REST_SECONDS }],
   }
 }
 

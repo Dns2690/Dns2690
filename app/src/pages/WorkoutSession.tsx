@@ -1,11 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar, { BarTextButton } from '../components/TopBar'
 import ExercisePicker from '../components/ExercisePicker'
 import Icon from '../components/Icon'
 import { Button, Placeholder, Row, Section } from '../components/ui'
 import { getExercise, imageUrl } from '../lib/exercises'
-import { getSession, saveSession } from '../lib/store'
+import { getSession, listSessions, saveSession } from '../lib/store'
+import {
+  formatKg,
+  lastPerformance,
+  parseReps,
+  setHints,
+  suggestLoad,
+  type LastPerformance,
+  type LoadSuggestion,
+  type SetHint,
+} from '../lib/progression'
 import { addExerciseToSession, addSet, removeExercise, replaceExerciseInSession, updateSet } from '../lib/workout'
 import type { SessionExercise, SetLog, WorkoutSession as Session } from '../lib/types'
 
@@ -30,10 +40,29 @@ export default function WorkoutSession() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [swapIndex, setSwapIndex] = useState<number | null>(null)
   const [restTimer, setRestTimer] = useState<RestTimerState | null>(null)
+  const [history, setHistory] = useState<Session[]>([])
 
   useEffect(() => {
     getSession(sessionId).then((s) => setSession(s ?? null))
+    listSessions().then(setHistory)
   }, [sessionId])
+
+  /**
+   * Por ejercicio: qué hiciste la última vez, si toca subir el peso y qué se
+   * precarga en cada serie. Se recalcula del historial; lo único que se guarda
+   * en la sesión es la decisión sobre la sugerencia.
+   */
+  const guidance = useMemo(() => {
+    if (!session) return []
+    return session.exercises.map((se) => {
+      const ex = getExercise(se.exerciseId)
+      const last = lastPerformance(history, se.exerciseId, session.id)
+      const target = parseReps(se.targetReps)
+      const suggestion = ex ? suggestLoad(last, target, se.sets.length, ex.equipment) : null
+      const accepted = se.loadChoice === 'accept' ? suggestion : null
+      return { last, suggestion, hints: setHints(se.sets.length, last, target, accepted) }
+    })
+  }, [session, history])
 
   useEffect(() => {
     if (!restTimer) return
@@ -51,10 +80,25 @@ export default function WorkoutSession() {
     await saveSession(next)
   }
 
-  function toggleSetDone(exIdx: number, setIdx: number, se: SessionExercise, set: SetLog) {
+  function chooseLoad(exIdx: number, choice: 'accept' | 'ignore') {
+    if (!session) return
+    persist({
+      ...session,
+      exercises: session.exercises.map((e, i) => (i === exIdx ? { ...e, loadChoice: choice } : e)),
+    })
+  }
+
+  function toggleSetDone(exIdx: number, setIdx: number, se: SessionExercise, set: SetLog, hint?: SetHint) {
     if (!session) return
     const nextDone = !set.done
-    persist(updateSet(session, exIdx, setIdx, { done: nextDone }))
+    // Marcar una serie sin escribir nada la da por hecha con lo precargado:
+    // repetir lo de la última vez tiene que costar un solo toque.
+    const patch: Partial<SetLog> = { done: nextDone }
+    if (nextDone && hint) {
+      if (set.weight == null && hint.weight != null) patch.weight = hint.weight
+      if (set.reps == null && hint.reps != null) patch.reps = hint.reps
+    }
+    persist(updateSet(session, exIdx, setIdx, patch))
     if (nextDone && se.restSeconds) {
       setRestTimer({ exerciseIndex: exIdx, secondsLeft: se.restSeconds })
     } else if (!nextDone && restTimer?.exerciseIndex === exIdx) {
@@ -99,6 +143,7 @@ export default function WorkoutSession() {
         {session.exercises.map((se, exIdx) => {
           const ex = getExercise(se.exerciseId)
           if (!ex) return null
+          const { last, suggestion, hints } = guidance[exIdx] ?? { last: null, suggestion: null, hints: [] }
           return (
             <section key={exIdx} className="px-4">
               <div className="overflow-hidden rounded-xl bg-cell">
@@ -136,6 +181,13 @@ export default function WorkoutSession() {
                   </button>
                 </div>
 
+                <LoadGuidance
+                  last={last}
+                  suggestion={suggestion}
+                  choice={se.loadChoice}
+                  onChoose={(c) => chooseLoad(exIdx, c)}
+                />
+
                 {se.note && (
                   <p className="mx-4 mb-3 rounded-lg bg-fit-500/12 px-3 py-2 text-[13px] leading-snug text-fit-200">{se.note}</p>
                 )}
@@ -154,7 +206,7 @@ export default function WorkoutSession() {
                         type="number"
                         inputMode="decimal"
                         aria-label={`Peso serie ${set.setNumber}`}
-                        placeholder="–"
+                        placeholder={hints[setIdx]?.weight != null ? formatKg(hints[setIdx].weight!) : '–'}
                         value={set.weight ?? ''}
                         onChange={(e) =>
                           persist(
@@ -169,7 +221,7 @@ export default function WorkoutSession() {
                         type="number"
                         inputMode="numeric"
                         aria-label={`Repeticiones serie ${set.setNumber}`}
-                        placeholder="–"
+                        placeholder={hints[setIdx]?.reps != null ? String(hints[setIdx].reps) : '–'}
                         value={set.reps ?? ''}
                         onChange={(e) =>
                           persist(
@@ -181,7 +233,7 @@ export default function WorkoutSession() {
                         className={cellInput}
                       />
                       <button
-                        onClick={() => toggleSetDone(exIdx, setIdx, se, set)}
+                        onClick={() => toggleSetDone(exIdx, setIdx, se, set, hints[setIdx])}
                         aria-label={set.done ? `Desmarcar serie ${set.setNumber}` : `Marcar serie ${set.setNumber}`}
                         aria-pressed={set.done}
                         className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
@@ -273,6 +325,68 @@ export default function WorkoutSession() {
             </button>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Lo que hiciste la última vez y, si corresponde, la sugerencia de subir. La
+ * sugerencia se acepta o se ignora; una vez decidida queda una línea con lo
+ * que se eligió, sin volver a insistir.
+ */
+function LoadGuidance({
+  last,
+  suggestion,
+  choice,
+  onChoose,
+}: {
+  last: LastPerformance | null
+  suggestion: LoadSuggestion | null
+  choice?: 'accept' | 'ignore'
+  onChoose: (choice: 'accept' | 'ignore') => void
+}) {
+  if (!last) return null
+  const summary = last.sets.map((s) => (s.weight ? `${formatKg(s.weight)}×${s.reps}` : `${s.reps}`)).join(' · ')
+  const when = new Date(last.date).toLocaleDateString('es', { day: 'numeric', month: 'short' })
+
+  return (
+    <div className="mx-4 mb-3 flex flex-col gap-2">
+      <p className="text-[13px] text-label-2">
+        Última vez ({when}): <span className="tabular-nums text-label">{summary}</span>
+      </p>
+      {suggestion && !choice && (
+        <div className="rounded-xl bg-fit-500/12 p-3">
+          <div className="flex items-start gap-2.5">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fit-500 text-black">
+              <Icon name="arrow-up" size={14} strokeWidth={2.8} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold text-label">Subí a {formatKg(suggestion.to)} kg</p>
+              <p className="text-[13px] leading-snug text-label-2">{suggestion.reason}. Te toca más peso.</p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => onChoose('accept')}
+              className="h-[34px] flex-1 rounded-full bg-fit-500 text-[15px] font-semibold text-black active:bg-fit-600"
+            >
+              Aplicar
+            </button>
+            <button
+              onClick={() => onChoose('ignore')}
+              className="h-[34px] flex-1 rounded-full bg-cell-2 text-[15px] font-semibold text-label active:bg-press"
+            >
+              Ahora no
+            </button>
+          </div>
+        </div>
+      )}
+      {suggestion && choice === 'accept' && (
+        <p className="flex items-center gap-1.5 text-[13px] font-semibold text-fit-400">
+          <Icon name="arrow-up" size={14} strokeWidth={2.8} />
+          Objetivo de hoy: {formatKg(suggestion.to)} kg
+        </p>
       )}
     </div>
   )
