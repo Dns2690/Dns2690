@@ -73,7 +73,7 @@ export default function Mindfulness() {
   if (!settings || logs === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Mindfulness" />
+        <TopBar title="Mindfulness" back />
         <p className="p-6 text-center text-base text-gray-500">Cargando…</p>
       </div>
     )
@@ -85,6 +85,7 @@ export default function Mindfulness() {
     <div className="flex flex-1 flex-col pb-6">
       <TopBar
         title="Mindfulness"
+        back
         right={
           <Link to="/ajustes" className="rounded-lg px-2 py-1 text-lg active:bg-white/10" aria-label="Ajustes">
             ⚙️

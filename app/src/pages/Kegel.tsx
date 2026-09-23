@@ -92,7 +92,7 @@ export default function Kegel() {
   if (!settings || sessions === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Kegel" />
+        <TopBar title="Kegel" back />
         <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
       </div>
     )
@@ -105,6 +105,7 @@ export default function Kegel() {
     <div className="flex flex-1 flex-col pb-6">
       <TopBar
         title="Kegel"
+        back
         right={
           <Link to="/ajustes" className="rounded-lg px-2 py-1 text-lg active:bg-white/10" aria-label="Ajustes">
             ⚙️

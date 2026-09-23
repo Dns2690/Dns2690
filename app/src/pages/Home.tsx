@@ -9,12 +9,13 @@ import {
   totalActiveDays,
   type ActivityByDate,
 } from '../lib/activity'
-import { DAILY_ROUTINE_GOAL, getLevel, todayKey } from '../lib/kegel'
-import { getKegelSettings, getProfile, listSessions } from '../lib/store'
+import { DAILY_ROUTINE_GOAL, todayKey } from '../lib/kegel'
+import { getProfile, listRoutines, listSessions } from '../lib/store'
 import { PROGRAMS } from '../data/programs'
 import { computeProgress } from '../lib/program'
+import { exercises } from '../lib/exercises'
 import { MODULE_THEMES } from '../lib/theme'
-import type { KegelSettings, Profile, WorkoutSession } from '../lib/types'
+import type { Profile, Routine, WorkoutSession } from '../lib/types'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -28,35 +29,33 @@ function longDate(): string {
   return new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-interface ModuleCard {
-  to: string
-  icon: string
-  title: string
-  status: string
-  done: boolean
-  accent: string
-}
-
+/**
+ * Portada de la app, dedicada a los ejercicios.
+ *
+ * Arriba va lo único que importa al abrirla: qué toca entrenar hoy. Después las
+ * secciones de ejercicios que no tienen pestaña propia, la constancia, y al
+ * final una sola entrada al plano secundario (Kegel y Mindfulness).
+ */
 export default function Home() {
   const [activity, setActivity] = useState<ActivityByDate | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [kegel, setKegel] = useState<KegelSettings | null>(null)
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
+  const [routines, setRoutines] = useState<Routine[]>([])
 
   useEffect(() => {
     let alive = true
-    ;(async () => {
-      const [a, p, k, s] = await Promise.all([
+    void (async () => {
+      const [a, p, s, r] = await Promise.all([
         loadActivity(),
         getProfile(),
-        getKegelSettings(),
         listSessions(),
+        listRoutines(),
       ])
       if (!alive) return
       setActivity(a)
       setProfile(p ?? null)
-      setKegel(k ?? null)
       setSessions(s)
+      setRoutines(r)
     })()
     return () => {
       alive = false
@@ -74,12 +73,13 @@ export default function Home() {
 
   // Programa con más avance: es el que el usuario está siguiendo de verdad.
   const activeProgram = useMemo(() => {
-    let best: { name: string; month: number; day: number; percent: number } | null = null
+    let best: { id: string; name: string; month: number; day: number; percent: number } | null = null
     for (const p of PROGRAMS) {
       const progress = computeProgress(sessions, p.id)
       if (progress.completedCount === 0) continue
       if (!best || progress.percent > best.percent) {
         best = {
+          id: p.id,
           name: p.name,
           month: progress.next?.month ?? 12,
           day: progress.next?.day ?? 3,
@@ -99,40 +99,57 @@ export default function Home() {
   }
 
   const todayActivity = activity[today]
-  const kegelToday = todayActivity?.kegel ?? 0
   const workoutToday = todayActivity?.workout ?? 0
+  const kegelToday = todayActivity?.kegel ?? 0
   const mindToday = todayActivity?.mindfulness ?? 0
+  const openSession = sessions.find((s) => !s.finishedAt)
+  const finishedCount = sessions.filter((s) => s.finishedAt).length
+  const fitness = MODULE_THEMES.fitness
 
-  const cards: ModuleCard[] = [
+  /** Lo que la app propone hacer ahora mismo. */
+  const next = openSession
+    ? {
+        to: `/entrenar/${openSession.id}`,
+        kicker: 'Sesión sin terminar',
+        title: openSession.routineName || 'Sesión libre',
+        cta: 'Seguir entrenando',
+      }
+    : activeProgram
+      ? {
+          to: `/programas/${activeProgram.id}/mes/${activeProgram.month}`,
+          kicker: `${activeProgram.name} · ${activeProgram.percent}%`,
+          title: `Mes ${activeProgram.month}, día ${activeProgram.day}`,
+          cta: 'Ver la sesión',
+        }
+      : {
+          to: '/programas',
+          kicker: 'Sin programa empezado',
+          title: 'Elegí por dónde arrancar',
+          cta: `${PROGRAMS.length} programas de un año`,
+        }
+
+  const sections = [
     {
-      to: '/ejercicios',
-      icon: '🏋️',
-      title: 'Ejercicios',
-      status: workoutToday
-        ? `${workoutToday} ${workoutToday === 1 ? 'sesión' : 'sesiones'} hoy`
-        : activeProgram
-          ? `${activeProgram.name} · mes ${activeProgram.month}, día ${activeProgram.day}`
-          : 'Elegí un programa o rutina',
-      done: workoutToday > 0,
-      accent: MODULE_THEMES.fitness.textHex,
+      to: '/programas',
+      icon: '🎯',
+      title: 'Programas',
+      subtitle: activeProgram
+        ? `${activeProgram.name} · ${activeProgram.percent}% completado`
+        : `${PROGRAMS.length} programas de un año`,
     },
     {
-      to: '/kegel',
-      icon: '🌊',
-      title: 'Kegel',
-      status: `${kegelToday} de ${DAILY_ROUTINE_GOAL} rutinas${
-        kegel ? ` · ${getLevel(kegel.levelId).label}` : ''
-      }`,
-      done: kegelToday >= DAILY_ROUTINE_GOAL,
-      accent: MODULE_THEMES.kegel.textHex,
+      to: '/biblioteca',
+      icon: '📚',
+      title: 'Biblioteca',
+      subtitle: `${exercises.length} ejercicios con video y explicación`,
     },
     {
-      to: '/mindfulness',
-      icon: '🧘',
-      title: 'Mindfulness',
-      status: mindToday ? `${mindToday} ${mindToday === 1 ? 'sesión' : 'sesiones'} hoy` : 'Todavía no meditaste',
-      done: mindToday > 0,
-      accent: MODULE_THEMES.mindfulness.textHex,
+      to: '/historial',
+      icon: '📈',
+      title: 'Historial',
+      subtitle: finishedCount
+        ? `${finishedCount} ${finishedCount === 1 ? 'sesión completada' : 'sesiones completadas'}`
+        : 'Todavía no registraste sesiones',
     },
   ]
 
@@ -151,6 +168,11 @@ export default function Home() {
       .join(', ')
     return `linear-gradient(to bottom, ${stops})`
   }
+
+  const wellnessStatus = [
+    `Kegel ${kegelToday}/${DAILY_ROUTINE_GOAL}`,
+    mindToday ? `${mindToday} ${mindToday === 1 ? 'meditación' : 'meditaciones'}` : 'sin meditar',
+  ].join(' · ')
 
   return (
     <div className="flex flex-1 flex-col pb-6">
@@ -172,38 +194,64 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col gap-3 p-4">
+        <Link
+          to={next.to}
+          className="rounded-2xl p-4 active:brightness-110"
+          style={{ background: `${fitness.textHex}1f` }}
+        >
+          <p className="text-sm text-gray-400">{next.kicker}</p>
+          <p className="mt-0.5 text-xl font-bold text-gray-100">{next.title}</p>
+          <p className="mt-2 text-base font-medium" style={{ color: fitness.textHex }}>
+            {next.cta} ›
+          </p>
+        </Link>
+
+        {workoutToday > 0 && (
+          <p className="px-1 text-base text-gray-500">
+            Hoy ya {workoutToday === 1 ? 'entrenaste una vez' : `entrenaste ${workoutToday} veces`}.
+          </p>
+        )}
+
         <div className="flex flex-col gap-2">
-          {cards.map((c) => (
+          {sections.map((s) => (
             <Link
-              key={c.to}
-              to={c.to}
+              key={s.to}
+              to={s.to}
               className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 active:bg-white/10"
             >
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                style={{ background: `${c.accent}1f` }}
-              >
-                {c.icon}
-              </span>
+              <span className="text-2xl">{s.icon}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-semibold text-gray-100">{c.title}</p>
-                <p className="truncate text-base text-gray-500">{c.status}</p>
+                <p className="text-lg font-semibold text-gray-100">{s.title}</p>
+                <p className="truncate text-base text-gray-500">{s.subtitle}</p>
               </div>
-              {c.done ? (
-                <span className="text-xl" style={{ color: c.accent }} aria-label="completado">
-                  ✓
-                </span>
-              ) : (
-                <span className="text-gray-600">›</span>
-              )}
+              <span className="text-gray-600">›</span>
             </Link>
           ))}
+          {routines.length > 0 && (
+            <Link
+              to="/rutinas"
+              className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 active:bg-white/10"
+            >
+              <span className="text-2xl">📋</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-gray-100">Rutinas</p>
+                <p className="truncate text-base text-gray-500">
+                  {routines.length} {routines.length === 1 ? 'rutina propia' : 'rutinas propias'}
+                </p>
+              </div>
+              <span className="text-gray-600">›</span>
+            </Link>
+          )}
         </div>
 
         <div className="rounded-2xl bg-white/5 p-4">
           <div className="flex items-baseline justify-between">
             <p className="text-lg font-bold text-gray-100">Tu constancia</p>
-            {streak > 0 && <p className="text-base font-medium text-gray-200">🔥 {streak} {streak === 1 ? 'día' : 'días'}</p>}
+            {streak > 0 && (
+              <p className="text-base font-medium text-gray-200">
+                🔥 {streak} {streak === 1 ? 'día' : 'días'}
+              </p>
+            )}
           </div>
           <p className="mt-1 text-base text-gray-500">
             Un día cuenta si hiciste algo en cualquier módulo.
@@ -235,6 +283,19 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Única entrada al plano secundario desde la portada. */}
+        <Link
+          to="/bienestar"
+          className="flex items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 active:bg-white/5"
+        >
+          <span className="text-xl">🌿</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-medium text-gray-300">Bienestar</p>
+            <p className="truncate text-sm text-gray-500">{wellnessStatus}</p>
+          </div>
+          <span className="text-gray-600">›</span>
+        </Link>
       </div>
     </div>
   )

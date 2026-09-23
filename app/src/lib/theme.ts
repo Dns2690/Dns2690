@@ -78,12 +78,18 @@ export const MODULE_THEMES: Record<ModuleId, ModuleTheme> = {
   },
 }
 
-/** Módulo al que pertenece una ruta, para teñir el menú y las cabeceras. */
+/**
+ * Módulo al que pertenece una ruta, para teñir el menú y las cabeceras.
+ *
+ * La portada '/' es de ejercicios: la app se dedica a eso. '/bienestar' no tiene
+ * módulo propio porque es solo la puerta a los otros dos.
+ */
 export function moduleForPath(pathname: string): ModuleId | null {
   if (pathname.startsWith('/kegel')) return 'kegel'
   if (pathname.startsWith('/mindfulness')) return 'mindfulness'
   if (
-    pathname.startsWith('/ejercicios') ||
+    pathname === '/' ||
+    pathname.startsWith('/biblioteca') ||
     pathname.startsWith('/ejercicio/') ||
     pathname.startsWith('/programas') ||
     pathname.startsWith('/rutinas') ||

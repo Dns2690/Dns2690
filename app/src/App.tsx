@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 import Splash from './components/Splash'
 import Home from './pages/Home'
-import FitnessHub from './pages/FitnessHub'
+import Wellness from './pages/Wellness'
 import Mindfulness from './pages/Mindfulness'
 import MindfulnessSession from './pages/MindfulnessSession'
 import VoiceTest from './pages/VoiceTest'
@@ -43,8 +43,12 @@ function Shell() {
       <main className="flex flex-1 flex-col">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/ejercicios" element={<FitnessHub />} />
-          <Route path="/ejercicios/biblioteca" element={<Exercises />} />
+          <Route path="/biblioteca" element={<Exercises />} />
+          <Route path="/bienestar" element={<Wellness />} />
+          {/* La portada absorbió el hub de ejercicios; estas dos rutas quedan
+              para que no se rompan accesos guardados de la versión anterior. */}
+          <Route path="/ejercicios" element={<Navigate to="/" replace />} />
+          <Route path="/ejercicios/biblioteca" element={<Navigate to="/biblioteca" replace />} />
           <Route path="/mindfulness" element={<Mindfulness />} />
           <Route path="/mindfulness/sesion" element={<MindfulnessSession />} />
           <Route path="/mindfulness/voz" element={<VoiceTest />} />

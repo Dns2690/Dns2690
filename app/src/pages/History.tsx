@@ -17,7 +17,7 @@ export default function History() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar title="Historial" />
+      <TopBar title="Historial" back />
       <div className="flex flex-col gap-2 p-4">
         {sessions === null && <p className="py-10 text-center text-sm text-gray-500">Cargando…</p>}
 

@@ -17,7 +17,7 @@ export default function ProgramsList() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar title="Programas" />
+      <TopBar title="Programas" back />
       <div className="flex flex-col gap-3 p-4">
         {profile && (
           <p className="px-1 text-sm text-gray-200">
