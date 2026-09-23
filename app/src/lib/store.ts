@@ -8,12 +8,14 @@ import type {
   MeasurementEntry,
   Profile,
   Routine,
+  RoutineDraft,
   WorkoutSession,
 } from './types'
 
 export const store = createStore('mis-ejercicios', 'data')
 
 const ROUTINE_PREFIX = 'routine:'
+const ROUTINE_DRAFT_PREFIX = 'routinedraft:'
 const SESSION_PREFIX = 'session:'
 const MEASUREMENT_PREFIX = 'measurement:'
 const KEGEL_SESSION_PREFIX = 'kegelsession:'
@@ -58,6 +60,23 @@ export async function saveRoutine(routine: Omit<Routine, 'id' | 'createdAt' | 'u
 
 export async function deleteRoutine(id: string): Promise<void> {
   await del(ROUTINE_PREFIX + id, store)
+  await del(ROUTINE_DRAFT_PREFIX + id, store)
+}
+
+/**
+ * Borradores del editor de rutinas. `key` es el id de la rutina que se está
+ * editando, o 'nueva' para la que todavía no existe.
+ */
+export async function getRoutineDraft(key: string): Promise<RoutineDraft | undefined> {
+  return get<RoutineDraft>(ROUTINE_DRAFT_PREFIX + key, store)
+}
+
+export async function saveRoutineDraft(key: string, draft: RoutineDraft): Promise<void> {
+  await set(ROUTINE_DRAFT_PREFIX + key, draft, store)
+}
+
+export async function deleteRoutineDraft(key: string): Promise<void> {
+  await del(ROUTINE_DRAFT_PREFIX + key, store)
 }
 
 export async function listSessions(): Promise<WorkoutSession[]> {

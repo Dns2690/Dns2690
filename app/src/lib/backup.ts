@@ -8,10 +8,21 @@ export interface BackupFile {
   data: Record<string, unknown>
 }
 
+/**
+ * Claves que no viajan en el respaldo: son estado momentáneo del editor, no
+ * registros. Restaurarlas en otro teléfono haría aparecer el aviso de "algo sin
+ * guardar" de la nada.
+ */
+const SKIP_PREFIXES = ['routinedraft:']
+
 export async function exportBackup(): Promise<BackupFile> {
   const all = await entries(store)
   const data: Record<string, unknown> = {}
-  for (const [k, v] of all) data[String(k)] = v
+  for (const [k, v] of all) {
+    const key = String(k)
+    if (SKIP_PREFIXES.some((p) => key.startsWith(p))) continue
+    data[key] = v
+  }
   return { app: 'mis-ejercicios', version: 1, exportedAt: new Date().toISOString(), data }
 }
 

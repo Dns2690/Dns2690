@@ -17,12 +17,15 @@ export default function ExercisePicker({
 }) {
   const [query, setQuery] = useState('')
   const [bodyPart, setBodyPart] = useState(initialBodyPart ?? '')
-  const [visible, setVisible] = useState(PAGE_SIZE)
 
-  const results = useMemo(() => {
-    setVisible(PAGE_SIZE)
-    return filterExercises({ query, bodyPart })
-  }, [query, bodyPart])
+  const results = useMemo(() => filterExercises({ query, bodyPart }), [query, bodyPart])
+
+  // La paginación se ata al filtro con el que se pidió: al cambiar de filtro la
+  // clave deja de coincidir y vuelve sola al primer tramo. Antes se hacía con
+  // un setVisible dentro del useMemo, que es escribir estado durante el render.
+  const filterKey = `${query}\u0000${bodyPart}`
+  const [page, setPage] = useState({ filterKey, visible: PAGE_SIZE })
+  const visible = page.filterKey === filterKey ? page.visible : PAGE_SIZE
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-[#0b0d12]">
@@ -67,7 +70,7 @@ export default function ExercisePicker({
           ))}
           {visible < results.length && (
             <button
-              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+              onClick={() => setPage({ filterKey, visible: visible + PAGE_SIZE })}
               className="rounded-lg border border-white/10 py-2 text-sm text-gray-300"
             >
               Cargar más

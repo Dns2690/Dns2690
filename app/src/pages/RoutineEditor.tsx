@@ -1,35 +1,106 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import ExercisePicker from '../components/ExercisePicker'
 import { getExercise, imageUrl } from '../lib/exercises'
-import { getRoutine, saveRoutine } from '../lib/store'
+import {
+  deleteRoutineDraft,
+  getRoutine,
+  getRoutineDraft,
+  saveRoutine,
+  saveRoutineDraft,
+} from '../lib/store'
 import type { RoutineExercise } from '../lib/types'
+
+/** Representación estable del formulario, para comparar contra lo guardado. */
+function snapshot(name: string, exercises: RoutineExercise[]): string {
+  return JSON.stringify({ name, exercises })
+}
 
 export default function RoutineEditor() {
   const { id } = useParams()
   const isNew = !id || id === 'nueva'
+  const draftKey = isNew ? 'nueva' : id!
   const navigate = useNavigate()
+
+  // El selector de ejercicios vive en la URL en vez de en un estado local: así
+  // el gesto de volver del teléfono lo cierra en lugar de sacarte del editor y
+  // tirar la rutina a medio armar.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pickerOpen = searchParams.get('agregar') === '1'
+  const pickerPushed = useRef(false)
 
   const [name, setName] = useState('')
   const [items, setItems] = useState<RoutineExercise[]>([])
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const [loaded, setLoaded] = useState(isNew)
+  const [loaded, setLoaded] = useState(false)
+  const [restored, setRestored] = useState(false)
+
+  /** Lo que hay guardado: vacío si es nueva, la rutina tal cual si se edita. */
+  const baseline = useRef(snapshot('', []))
 
   useEffect(() => {
-    if (isNew) return
-    getRoutine(id!).then((r) => {
-      if (r) {
-        setName(r.name)
-        setItems(r.exercises)
+    let alive = true
+    void (async () => {
+      const [routine, draft] = await Promise.all([
+        isNew ? Promise.resolve(undefined) : getRoutine(id!),
+        getRoutineDraft(draftKey),
+      ])
+      if (!alive) return
+      if (routine) {
+        baseline.current = snapshot(routine.name, routine.exercises)
+        setName(routine.name)
+        setItems(routine.exercises)
+      }
+      // El borrador manda sobre lo guardado: es lo último que estuvo en pantalla.
+      if (draft && snapshot(draft.name, draft.exercises) !== baseline.current) {
+        setName(draft.name)
+        setItems(draft.exercises)
+        setRestored(true)
       }
       setLoaded(true)
+    })()
+    return () => {
+      alive = false
+    }
+  }, [id, isNew, draftKey])
+
+  // Autoguardado. Sin esto, salir del editor —tocar la miniatura de un
+  // ejercicio para verlo, el gesto de volver, cerrar la app— desmontaba el
+  // componente y se perdía todo lo agregado. Solo se escribe si hay diferencia
+  // con lo guardado, para no dejar borradores fantasma que luego avisen de
+  // cambios que no existen.
+  useEffect(() => {
+    if (!loaded) return
+    if (snapshot(name, items) === baseline.current) {
+      void deleteRoutineDraft(draftKey)
+      return
+    }
+    void saveRoutineDraft(draftKey, {
+      name,
+      exercises: items,
+      savedAt: new Date().toISOString(),
     })
-  }, [id, isNew])
+  }, [loaded, name, items, draftKey])
+
+  function openPicker() {
+    pickerPushed.current = true
+    setSearchParams({ agregar: '1' })
+  }
+
+  function closePicker() {
+    // Cerrar retrocediendo deja el historial limpio; si se llegó acá con la URL
+    // ya abierta no hay entrada que sacar, así que se reemplaza.
+    if (pickerPushed.current) {
+      pickerPushed.current = false
+      navigate(-1)
+    } else {
+      setSearchParams({}, { replace: true })
+    }
+  }
 
   function addExercise(exerciseId: string) {
     setItems((prev) => [...prev, { exerciseId, targetSets: 3, targetReps: '10-12' }])
-    setPickerOpen(false)
+    closePicker()
   }
 
   function updateItem(i: number, patch: Partial<RoutineExercise>) {
@@ -40,6 +111,13 @@ export default function RoutineEditor() {
     setItems((prev) => prev.filter((_, idx) => idx !== i))
   }
 
+  function discardDraft() {
+    const base = JSON.parse(baseline.current) as { name: string; exercises: RoutineExercise[] }
+    setName(base.name)
+    setItems(base.exercises)
+    setRestored(false)
+  }
+
   async function handleSave() {
     if (!name.trim() || items.length === 0) return
     await saveRoutine({
@@ -47,6 +125,7 @@ export default function RoutineEditor() {
       name: name.trim(),
       exercises: items,
     })
+    await deleteRoutineDraft(draftKey)
     navigate('/rutinas')
   }
 
@@ -64,6 +143,15 @@ export default function RoutineEditor() {
       <TopBar title={isNew ? 'Nueva rutina' : 'Editar rutina'} back />
 
       <div className="flex flex-col gap-3 p-4">
+        {restored && (
+          <div className="flex items-center gap-3 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-200">
+            <span className="flex-1">Recuperamos lo que tenías sin guardar.</span>
+            <button type="button" onClick={discardDraft} className="font-medium underline">
+              Descartar
+            </button>
+          </div>
+        )}
+
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -117,7 +205,7 @@ export default function RoutineEditor() {
         </div>
 
         <button
-          onClick={() => setPickerOpen(true)}
+          onClick={openPicker}
           className="rounded-lg border border-dashed border-white/20 py-2.5 text-sm text-gray-300 active:bg-white/10"
         >
           + Agregar ejercicio
@@ -132,9 +220,7 @@ export default function RoutineEditor() {
         </button>
       </div>
 
-      {pickerOpen && (
-        <ExercisePicker onSelect={(e) => addExercise(e.id)} onClose={() => setPickerOpen(false)} />
-      )}
+      {pickerOpen && <ExercisePicker onSelect={(e) => addExercise(e.id)} onClose={closePicker} />}
     </div>
   )
 }

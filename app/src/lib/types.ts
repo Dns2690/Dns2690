@@ -34,6 +34,16 @@ export interface Routine {
   updatedAt: string
 }
 
+/**
+ * Rutina a medio armar. Vive aparte de `Routine` porque todavía no es válida
+ * —puede no tener nombre ni ejercicios— y no debe aparecer en la lista.
+ */
+export interface RoutineDraft {
+  name: string
+  exercises: RoutineExercise[]
+  savedAt: string
+}
+
 export interface SetLog {
   setNumber: number
   weight: number | null
