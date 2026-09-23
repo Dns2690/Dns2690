@@ -20,7 +20,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'starter',
     name: 'Starter',
-    icon: '🔑',
+    icon: 'key',
     description:
       'Contraé y soltá rápido. Después contraé de nuevo y mantené 3 segundos. Soltá. Mantené el ritmo.',
     minLevel: 'beginner',
@@ -35,7 +35,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'short-holding',
     name: 'Short Holding',
-    icon: '⏳',
+    icon: 'hourglass',
     description: 'Contraé, mantené 3 segundos, soltá y descansá 3 segundos.',
     minLevel: 'beginner',
     pattern: [
@@ -48,7 +48,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'short-holding-2',
     name: 'Short Holding 2',
-    icon: '⏳',
+    icon: 'hourglass',
     description:
       'Contraé lo más fuerte que puedas. Mantené 5 segundos. Después soltá y descansá 5 segundos.',
     minLevel: 'beginner',
@@ -62,7 +62,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'front-clamp',
     name: 'Front Clamp',
-    icon: '🗜️',
+    icon: 'clamp',
     description:
       'Contraé lentamente durante 2 segundos hasta la tensión máxima. Después soltá rápido. Mantené el ritmo.',
     minLevel: 'beginner',
@@ -74,7 +74,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'back-clamp',
     name: 'Back Clamp',
-    icon: '🗜️',
+    icon: 'clamp',
     description:
       'Contraé rápido hasta la tensión máxima. Después soltá lentamente durante 2 segundos. Mantené el ritmo.',
     minLevel: 'beginner',
@@ -86,7 +86,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'trembling',
     name: 'Trembling',
-    icon: '〰️',
+    icon: 'wave',
     description: 'Contraé y soltá siguiendo el ritmo. Llevá cada contracción a la tensión máxima.',
     minLevel: 'beginner',
     pattern: [
@@ -97,7 +97,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'trembling-2',
     name: 'Trembling 2',
-    icon: '⚡',
+    icon: 'bolt',
     description:
       'Pulsos rápidos: contraé y soltá al ritmo marcado, llevando cada contracción a la tensión máxima.',
     minLevel: 'beginner',
@@ -109,7 +109,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'gearbox',
     name: 'Gearbox',
-    icon: '⚙️',
+    icon: 'steps',
     description:
       'Subí la contracción por etapas hasta el máximo y bajá por las mismas etapas. Trabajá el control gradual, no la fuerza bruta.',
     minLevel: 'medium',
@@ -125,7 +125,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'holding',
     name: 'Holding',
-    icon: '🏔️',
+    icon: 'mountain',
     description:
       'Contraé y sostené 10 segundos sin aflojar. Después soltá y descansá 10 segundos. Es el ejercicio de resistencia.',
     minLevel: 'medium',
@@ -139,7 +139,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'reverse',
     name: 'Reverse Kegel',
-    icon: '🌬️',
+    icon: 'wind',
     mode: 'lengthen',
     description:
       'Al revés: en vez de apretar, empujá suave hacia afuera —como si fueras a orinar o soltar gas, sin hacerlo— y sostené. Alarga y relaja el piso pélvico. Nunca hagas fuerza.',
@@ -153,7 +153,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'knack',
     name: 'The Knack',
-    icon: '🛡️',
+    icon: 'shield',
     description:
       'Contracción de reacción: apretá fuerte y rápido, sostené 2 segundos y soltá. Entrena el reflejo que protege ante un esfuerzo repentino, como toser o levantar peso.',
     minLevel: 'medium',
@@ -166,7 +166,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'endurance',
     name: 'Endurance',
-    icon: '🧗',
+    icon: 'infinity',
     description:
       'Contraé a media fuerza —no al máximo— y sostené 15 segundos sin aflojar. Trabaja las fibras lentas, las de resistencia, que se entrenan mejor por debajo del máximo.',
     minLevel: 'advanced',
@@ -179,7 +179,7 @@ export const KEGEL_EXERCISES: KegelExercise[] = [
   {
     id: 'full-elevator',
     name: 'Full Elevator',
-    icon: '🛗',
+    icon: 'elevator',
     description:
       'El ascensor completo: subí por cuatro pisos hasta el máximo, sostené arriba y bajá piso por piso sin soltar de golpe. El control al bajar es la parte difícil.',
     minLevel: 'advanced',

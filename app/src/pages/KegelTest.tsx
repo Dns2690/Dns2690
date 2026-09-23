@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Section } from '../components/ui'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
 import { todayKey } from '../lib/kegel'
 import {
@@ -124,36 +126,39 @@ export default function KegelTest() {
 
   if (stage === 'intro') {
     return (
-      <div className="flex flex-1 flex-col pb-6">
-        <TopBar title="Test de resistencia" back />
-        <div className="flex flex-col gap-3 p-4">
-          <div className="rounded-2xl bg-white/5 p-4">
-            <p className="text-sm text-gray-300">
+      <div className="flex flex-1 flex-col pb-8">
+        <TopBar title="Test" back />
+        <div className="flex flex-col gap-7 pt-4">
+          <div className="flex flex-col items-center px-8 text-center">
+            <IconTile name="mountain" tone="kegel" size="xl" />
+            <p className="mt-4 text-[28px] font-bold leading-tight tracking-tight text-label">Contracción máxima</p>
+            <p className="mt-3 text-[17px] leading-relaxed text-label">
               Contraé el piso pélvico lo más fuerte que puedas y sostené <strong>todo el tiempo que aguantes</strong>.
               Cuando ya no puedas mantener la tensión, tocá <strong>Solté</strong>.
             </p>
-            <p className="mt-2 text-sm text-gray-500">
-              Es la medición real de tu avance. Repetila una vez por mes, en condiciones parecidas: mismo momento del
-              día y sin haber entrenado justo antes.
+            <p className="mt-3 text-[15px] leading-snug text-label-2">
+              Es la medición real de tu avance. Repetila una vez por mes en condiciones parecidas: mismo momento del día
+              y sin haber entrenado justo antes.
             </p>
           </div>
 
           {previous && (
-            <div className="rounded-2xl bg-white/5 p-4 text-center">
-              <p className="text-sm text-gray-500">Tu último test</p>
-              <p className="mt-1 text-2xl font-bold text-gray-100">
-                {previous.seconds}
-                <span className="ml-1 text-sm font-normal text-gray-500">s</span>
-              </p>
-            </div>
+            <Section>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-[17px] text-label">Tu último test</span>
+                <span className="text-[22px] font-bold tabular-nums text-label">
+                  {previous.seconds}
+                  <span className="ml-1 text-[15px] font-medium text-label-2">s</span>
+                </span>
+              </div>
+            </Section>
           )}
 
-          <button
-            onClick={begin}
-            className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
-          >
-            Empezar test
-          </button>
+          <div className="px-4">
+            <Button tone="kegel" icon="play" onClick={begin}>
+              Empezar test
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -161,9 +166,9 @@ export default function KegelTest() {
 
   if (stage === 'countdown') {
     return (
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="text-sm text-gray-400">Preparate…</p>
-        <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-2">
+        <p className="text-[17px] text-label-2">Preparate…</p>
+        <p className="text-[120px] font-bold leading-none tabular-nums text-kegel-400">{prepCount}</p>
       </div>
     )
   }
@@ -171,32 +176,27 @@ export default function KegelTest() {
   if (stage === 'done' && result != null) {
     const delta = previous ? Math.round((result - previous.seconds) * 10) / 10 : null
     return (
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-5xl">🏔️</p>
-        <p className="text-4xl font-bold text-gray-100">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center px-8 text-center">
+        <IconTile name="mountain" tone="kegel" size="xl" />
+        <p className="mt-5 text-[64px] font-bold leading-none tracking-tight tabular-nums text-label">
           {result}
-          <span className="ml-1 text-lg font-normal text-gray-500">s</span>
+          <span className="ml-1 text-[22px] font-semibold text-label-2">s</span>
         </p>
         {delta != null && delta !== 0 && (
-          <p className={`text-sm ${delta > 0 ? 'text-rose-400' : 'text-amber-400'}`}>
+          <p className={`mt-3 flex items-center gap-1 text-[17px] font-semibold ${delta > 0 ? 'text-kegel-400' : 'text-warn-400'}`}>
+            <Icon name="arrow-up" size={18} strokeWidth={2.6} className={delta > 0 ? '' : 'rotate-180'} />
             {delta > 0 ? '+' : ''}
-            {delta}s respecto al test anterior
+            {delta} s respecto al test anterior
           </p>
         )}
-        {delta === 0 && <p className="text-sm text-gray-500">Igual que el test anterior</p>}
-        <div className="mt-4 flex w-full flex-col gap-2">
-          <button
-            onClick={() => navigate('/kegel/progreso')}
-            className="w-full rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
-          >
+        {delta === 0 && <p className="mt-3 text-[17px] text-label-2">Igual que el test anterior</p>}
+        <div className="mt-8 flex w-full max-w-xs flex-col gap-2.5">
+          <Button tone="kegel" onClick={() => navigate('/kegel/progreso')}>
             Ver mi progreso
-          </button>
-          <button
-            onClick={() => navigate('/kegel')}
-            className="w-full rounded-lg bg-white/10 py-3 text-sm font-medium text-gray-100 active:bg-white/20"
-          >
+          </Button>
+          <Button tone="gray" onClick={() => navigate('/kegel')}>
             Volver
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -204,21 +204,19 @@ export default function KegelTest() {
 
   return (
     <div className="pt-safe flex flex-1 flex-col">
-      <div className="px-4 pt-4 text-center">
-        <p className="text-sm text-gray-400">Sostené la contracción</p>
-      </div>
+      <p className="px-4 pt-4 text-center text-[17px] text-label-2">Sostené la contracción</p>
 
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef}>
-          <p className="text-5xl font-bold tabular-nums text-gray-100">{elapsed.toFixed(1)}</p>
-          <p className="mt-1 text-sm font-medium text-rose-400">segundos</p>
+          <p className="text-[56px] font-bold leading-none tabular-nums text-label">{elapsed.toFixed(1)}</p>
+          <p className="mt-2 text-[15px] font-semibold text-kegel-400">segundos</p>
         </KegelGuide>
       </div>
 
-      <div className="p-4">
+      <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <button
           onClick={release}
-          className="w-full rounded-lg bg-red-500/90 py-4 text-base font-semibold text-white active:bg-red-500"
+          className="h-[56px] w-full rounded-[14px] bg-danger-500 text-[20px] font-bold text-black active:opacity-80"
         >
           Solté
         </button>

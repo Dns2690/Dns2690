@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import TopBar from '../components/TopBar'
+import Icon from '../components/Icon'
+import { Row, Section, Toggle } from '../components/ui'
 import { getMindfulnessSettings, saveMindfulnessSettings } from '../lib/store'
 import type { MindfulnessSettings } from '../lib/types'
 
@@ -91,7 +93,7 @@ export default function VoiceTest() {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Voz" back />
-        <p className="p-6 text-center text-base text-gray-500">Cargando…</p>
+        <p className="p-6 text-center text-base text-label-2">Cargando…</p>
       </div>
     )
   }
@@ -101,144 +103,128 @@ export default function VoiceTest() {
   const selected = settings.voiceURI
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title="Voz" back />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Voz guiada" back="Mindfulness" large />
 
-      <div className="flex flex-col gap-4 p-4">
-        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4">
-          <p className="text-base font-medium text-violet-300">✓ Tu iPhone permite voz guiada</p>
-          <p className="mt-1 text-base leading-relaxed text-gray-400">
-            La prueba anterior confirmó que puede hablar desde temporizadores. Falta elegir una voz que valga la
-            pena escuchar diez minutos seguidos.
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-base font-semibold text-gray-100">Para conseguir mejores voces</p>
-          <p className="mt-2 text-base leading-relaxed text-gray-400">
-            La voz que trae iOS de fábrica es la compacta, y suena robótica. Las buenas hay que bajarlas a mano:
-          </p>
-          <p className="mt-2 text-base leading-relaxed text-gray-300">
-            Ajustes → Accesibilidad → <strong>Contenido hablado</strong> → Voces → Español → tocá una voz y bajá la
-            versión <strong>Mejorada</strong> o <strong>Premium</strong>.
-          </p>
-          <p className="mt-2 text-base leading-relaxed text-gray-500">
-            Pesan más de 100 MB cada una y hace falta wifi. Después de bajarla, <strong>cerrá la app del todo</strong>{' '}
-            (deslizá hacia arriba en el multitarea) y volvé a abrirla: Safari cachea la lista de voces y no la
-            relee sola.
-          </p>
-        </div>
-
-        <label className="flex items-center justify-between rounded-2xl bg-white/5 p-4">
-          <div className="min-w-0 flex-1 pr-3">
-            <p className="text-base font-medium text-gray-100">Usar voz en las sesiones</p>
-            <p className="text-sm text-gray-500">Si la apagás, la guía queda por texto y campanas</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={settings.voiceEnabled ?? false}
-            onChange={(e) => update({ voiceEnabled: e.target.checked })}
-            className="h-5 w-5 shrink-0 accent-violet-400"
+      <div className="flex flex-col gap-7">
+        <Section footer="Si la apagás, la guía queda por texto y campanas.">
+          <Row
+            icon="mic"
+            tone="mind"
+            title="Usar voz en las sesiones"
+            trailing={
+              <Toggle
+                tone="mind"
+                label="Usar voz en las sesiones"
+                checked={settings.voiceEnabled ?? false}
+                onChange={(v) => update({ voiceEnabled: v })}
+              />
+            }
           />
-        </label>
+        </Section>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-base font-semibold text-gray-100">Velocidad</p>
-            <p className="text-base text-violet-300">{(settings.voiceRate ?? 0.85).toFixed(2)}×</p>
+        <Section header="Velocidad" footer="Más lento suena más calmo, y es el ajuste que más mejora una voz mediocre.">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Icon name="speaker" size={18} className="shrink-0 text-label-2" />
+            <input
+              type="range"
+              min="0.6"
+              max="1.1"
+              step="0.05"
+              value={settings.voiceRate ?? 0.85}
+              onChange={(e) => update({ voiceRate: Number(e.target.value) })}
+              aria-label="Velocidad de la voz"
+              className="h-1 flex-1 accent-mind-500"
+            />
+            <span className="w-12 shrink-0 text-right text-[17px] tabular-nums text-label-2">
+              {(settings.voiceRate ?? 0.85).toFixed(2)}×
+            </span>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            Más lento suena más calmo, y es el ajuste que más mejora una voz mediocre.
-          </p>
-          <input
-            type="range"
-            min="0.6"
-            max="1.1"
-            step="0.05"
-            value={settings.voiceRate ?? 0.85}
-            onChange={(e) => update({ voiceRate: Number(e.target.value) })}
-            className="mt-3 w-full accent-violet-400"
-          />
-        </div>
+        </Section>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 px-1">
-            <p className="text-sm text-gray-500">
-              {shown.length} de {voices.length} {voices.length === 1 ? 'voz' : 'voces'}
-            </p>
-            <div className="flex shrink-0 gap-3">
-              <button onClick={reload} className="text-sm text-violet-400">
-                Recargar
-              </button>
-              {voices.length > spanish.length && (
-                <button onClick={() => setShowAll((v) => !v)} className="text-sm text-violet-400">
-                  {showAll ? 'Solo español' : 'Ver todas'}
-                </button>
-              )}
-            </div>
-          </div>
-
+        <Section
+          header={`${shown.length} de ${voices.length} ${voices.length === 1 ? 'voz' : 'voces'}`}
+          footer="El identificador gris es la prueba de qué versión de la voz es: dice compact, enhanced o premium."
+        >
           {spanish.length > 0 && spanish.every((v) => tierOf(v) === 'Compacta') && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-              <p className="text-base font-medium text-amber-300">
+            <div className="px-4 py-3">
+              <p className="flex items-center gap-2 text-[15px] font-semibold text-warn-300">
+                <Icon name="info" size={18} />
                 Todas las voces en español son compactas
               </p>
-              <p className="mt-1 text-base leading-relaxed text-gray-400">
-                Aunque tengas Carlos mejorada instalada en Ajustes, tu iOS no la está exponiendo al navegador. Es
-                una limitación conocida y no hay forma de sortearla desde la web.
+              <p className="mt-1 text-[15px] leading-snug text-label-2">
+                Aunque tengas una voz mejorada instalada en Ajustes, tu iOS no la está exponiendo al navegador. Es una
+                limitación conocida y no hay forma de sortearla desde la web.
               </p>
             </div>
           )}
 
           {shown.length === 0 && (
-            <p className="rounded-2xl bg-white/5 p-4 text-base text-gray-500">
-              Este navegador no está exponiendo voces todavía. Probá recargar la pantalla.
+            <p className="px-4 py-3 text-[15px] text-label-2">
+              Este navegador no está exponiendo voces todavía. Probá recargar.
             </p>
           )}
 
           {shown.map((v) => (
-            <div
-              key={v.voiceURI}
-              className={`flex items-center gap-3 rounded-xl p-3 ${
-                selected === v.voiceURI ? 'bg-violet-400/15 ring-1 ring-violet-400' : 'bg-white/5'
-              }`}
-            >
-              <button onClick={() => update({ voiceURI: v.voiceURI })} className="min-w-0 flex-1 text-left">
-                <div className="flex items-baseline gap-2">
-                  <p className="text-base font-medium text-gray-100">{v.name}</p>
-                  {tierOf(v) && (
-                    <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${
-                        tierOf(v) === 'Compacta'
-                          ? 'bg-white/10 text-gray-400'
-                          : 'bg-violet-400/20 text-violet-300'
-                      }`}
-                    >
-                      {tierOf(v)}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500">
-                  {v.lang}
-                  {v.localService ? ' · en el dispositivo' : ' · por red'}
-                </p>
-                {/* El identificador interno es la prueba dura de qué versión es. */}
-                <p className="mt-0.5 break-all font-mono text-xs text-gray-600">{v.voiceURI}</p>
+            <div key={v.voiceURI} className="flex items-center gap-3 px-4 py-2.5">
+              <button
+                onClick={() => update({ voiceURI: v.voiceURI })}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-60"
+              >
+                <span className="w-5 shrink-0">
+                  {selected === v.voiceURI && <Icon name="check" size={20} strokeWidth={2.6} className="text-mind-400" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate text-[17px] text-label">{v.name}</span>
+                    {tierOf(v) && (
+                      <span
+                        className={`shrink-0 rounded-md px-1.5 py-px text-[12px] font-medium ${
+                          tierOf(v) === 'Compacta' ? 'bg-cell-2 text-label-2' : 'bg-mind-500/20 text-mind-300'
+                        }`}
+                      >
+                        {tierOf(v)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="block text-[13px] text-label-2">
+                    {v.lang}
+                    {v.localService ? ' · en el dispositivo' : ' · por red'}
+                  </span>
+                  <span className="mt-0.5 block break-all font-mono text-[11px] text-label-3">{v.voiceURI}</span>
+                </span>
               </button>
               <button
                 onClick={() => preview(v)}
-                className="shrink-0 rounded-lg bg-white/10 px-4 py-2 text-base text-gray-100 active:bg-white/20"
+                aria-label={speaking === v.voiceURI ? `Detener ${v.name}` : `Escuchar ${v.name}`}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-mind-500/20 text-mind-300 active:bg-mind-500/30"
               >
-                {speaking === v.voiceURI ? '▪' : '▶'}
+                <Icon name={speaking === v.voiceURI ? 'pause' : 'play'} size={16} />
               </button>
             </div>
           ))}
-        </div>
+          <Row onClick={reload} title={<span className="text-mind-400">Recargar voces</span>} />
+          {voices.length > spanish.length && (
+            <Row
+              onClick={() => setShowAll((v) => !v)}
+              title={<span className="text-mind-400">{showAll ? 'Solo español' : 'Ver todas las voces'}</span>}
+            />
+          )}
+        </Section>
 
-        <p className="px-1 text-sm leading-relaxed text-gray-600">
-          Si ninguna te convence, hay un camino mejor para una app personal: grabar tu propia voz una vez y que sea
-          esa la que te guíe. Decímelo y lo construyo.
-        </p>
+        <Section header="Mejores voces">
+          <div className="px-4 py-3 text-[15px] leading-relaxed text-label-2">
+            <p>La voz que trae iOS de fábrica es la compacta, y suena robótica. Las buenas hay que bajarlas a mano:</p>
+            <p className="mt-2 text-label">
+              Ajustes → Accesibilidad → <strong>Contenido hablado</strong> → Voces → Español → elegí una voz y bajá la
+              versión <strong>Mejorada</strong> o <strong>Premium</strong>.
+            </p>
+            <p className="mt-2">
+              Pesan más de 100 MB cada una y hace falta wifi. Después, <strong className="text-label">cerrá la app del todo</strong>{' '}
+              y volvé a abrirla: Safari guarda la lista de voces y no la relee sola.
+            </p>
+          </div>
+        </Section>
       </div>
     </div>
   )

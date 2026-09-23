@@ -566,7 +566,7 @@ export const YEAR1: ProgramInfo = {
   id: 'year1',
   name: 'Año 1',
   tagline: 'De sedentario a entrenar solo, sin equipo',
-  icon: '🎯',
+  icon: 'target',
   equipment: 'Sin equipo al inicio, mancuernas caseras desde el mes 5',
   months: MONTHS,
 }

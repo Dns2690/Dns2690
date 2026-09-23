@@ -1,5 +1,69 @@
 @import "tailwindcss";
 
+/*
+ * Sistema visual de Soma: modo oscuro de iOS sobre negro puro.
+ *
+ * Los nombres son semánticos —qué es, no qué color es— para que cambiar un tono
+ * sea tocar una línea acá y no buscar clases por toda la app.
+ */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue",
+    system-ui, sans-serif;
+
+  /* Superficies. Los valores son los de iOS en modo oscuro: fondo negro puro
+     (en OLED es literalmente pantalla apagada), celdas agrupadas en #1C1C1E y
+     un escalón más claro para lo que va encima de una celda. */
+  --color-bg: #000000;
+  --color-cell: #1c1c1e;
+  --color-cell-2: #2c2c2e;
+  --color-press: #3a3a3c;
+  --color-sep: #38383a;
+  --color-material: rgb(22 22 24 / 0.78);
+
+  /* Texto. label-3 queda en 2.5:1 sobre celda: igual que en iOS, es solo para
+     lo prescindible (placeholders, marcas de "ya hecho"), nunca para leer. */
+  --color-label: #ffffff;
+  --color-label-2: #98989f;
+  --color-label-3: #5a5a5f;
+
+  /* Acentos de módulo, para UI: botones, íconos, tinte. Contraste sobre negro:
+     verde 15.7:1, azul 5.8:1, morado 6.0:1. El glifo negro sobre cada acento
+     tiene el mismo contraste, por eso los íconos van en negro. */
+  --color-fit-200: #b6ffca;
+  --color-fit-300: #7dff9f;
+  --color-fit-400: #3cff73;
+  --color-fit-500: #3cff73;
+  --color-fit-600: #2ee063;
+
+  --color-kegel-200: #99c9ff;
+  --color-kegel-300: #5eaaff;
+  --color-kegel-400: #409cff;
+  --color-kegel-500: #0a84ff;
+  --color-kegel-600: #0070e0;
+
+  --color-mind-200: #e5c2fa;
+  --color-mind-300: #d49af6;
+  --color-mind-400: #c77ef4;
+  --color-mind-500: #bf5af2;
+  --color-mind-600: #a646d6;
+
+  /* Escalones para datos (gráficos, tira de constancia). Salen de validar los
+     tres juntos sobre #000: dentro de la banda de luminosidad para que ninguno
+     encandile, y el peor par bajo daltonismo en ΔE 10.4 (mínimo 8). Los
+     acentos de arriba no pasan como datos: el azul y el morado de iOS se
+     confunden en protanopía (ΔE 4.3). */
+  --color-fit-data: #16af49;
+  --color-kegel-data: #085dc7;
+  --color-mind-data: #b95dfc;
+
+  /* Estados, de iOS. Reservados: nunca se usan como color de serie. */
+  --color-warn-300: #ffd60a;
+  --color-warn-400: #ffd60a;
+  --color-warn-500: #ff9f0a;
+  --color-danger-400: #ff453a;
+  --color-danger-500: #ff453a;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -10,10 +74,12 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: #0b0d12;
-  color: #e5e7eb;
-  font: 17px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-label);
+  font: 17px/1.35 var(--font-sans);
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
 
@@ -28,6 +94,7 @@ body {
 
 input, select, textarea, button {
   font: inherit;
+  letter-spacing: inherit;
 }
 
 /*
@@ -40,6 +107,40 @@ input, select, textarea, button {
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* Material translúcido de las barras de iOS. */
+.material {
+  background: var(--color-material);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Separador de medio punto: en pantallas @2x/@3x es la línea fina de iOS. */
+.hairline-t {
+  box-shadow: inset 0 0.5px 0 var(--color-sep);
+}
+.hairline-b {
+  box-shadow: inset 0 -0.5px 0 var(--color-sep);
+}
+
+/*
+ * Separadores de las listas agrupadas: medio punto, entre filas (no antes de
+ * la primera) y arrancando donde arranca el texto de la fila, que la fila
+ * declara en --sep-inset según tenga ícono o no.
+ */
+.ios-list > * + * {
+  position: relative;
+}
+.ios-list > * + *::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--sep-inset, 16px);
+  height: 0.5px;
+  background: var(--color-sep);
+  pointer-events: none;
 }
 
 @keyframes splash-in {
@@ -68,14 +169,18 @@ input, select, textarea, button {
   }
 }
 
-@keyframes splash-glow-bg {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
+/* El arco arranca invisible: con remate redondeado, un trazo de largo cero
+   igual pinta un punto mientras espera su turno. */
+@keyframes splash-draw {
+  0% {
+    opacity: 0;
   }
-  50% {
+  1% {
     opacity: 1;
-    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
   }
 }
 

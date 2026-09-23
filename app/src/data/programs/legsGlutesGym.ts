@@ -556,7 +556,7 @@ export const LEGS_GLUTES_GYM: ProgramInfo = {
   id: 'legs-glutes-gym',
   name: 'Piernas y glúteos con equipo',
   tagline: 'Foco en pierna y glúteo sin descuidar el resto del cuerpo',
-  icon: '🍑',
+  icon: 'kettlebell',
   equipment: 'Gimnasio: máquinas, Smith, mancuernas, barra y kettlebell',
   months: MONTHS,
 }

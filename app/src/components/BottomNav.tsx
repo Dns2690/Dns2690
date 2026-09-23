@@ -1,33 +1,28 @@
 import { Link, useLocation } from 'react-router-dom'
-import { MODULE_THEMES, type ModuleId } from '../lib/theme'
+import Icon, { type IconName } from './Icon'
 
 interface NavItem {
   to: string
   label: string
-  icon: string
-  module: ModuleId | null
+  icon: IconName
   /** Rutas que dejan esta pestaña encendida, además de la propia. */
   owns: string[]
 }
 
 /**
- * Tres pestañas de ejercicios y una para el resto.
+ * Barra de pestañas de iOS: material translúcido, glifos de 25 pt y rótulos
+ * de 10 pt.
  *
- * La portada es directamente la de ejercicios —la app se dedica a eso—, así que
- * no hay pestaña "Inicio" aparte. Kegel y Mindfulness comparten la última,
- * Bienestar, que queda encendida mientras estés dentro de cualquiera de los dos.
+ * Tres pestañas de ejercicios y una para el resto. La portada es directamente
+ * la de ejercicios —la app se dedica a eso—, así que no hay "Inicio" aparte.
+ * Como en cualquier app de iOS hay un solo tinte, el verde: Bienestar se
+ * enciende en verde igual que las demás aunque adentro todo sea azul y morado.
  */
 const items: NavItem[] = [
-  {
-    to: '/',
-    label: 'Ejercicios',
-    icon: '🏋️',
-    module: 'fitness',
-    owns: ['/biblioteca', '/ejercicio/', '/programas', '/historial'],
-  },
-  { to: '/rutinas', label: 'Rutinas', icon: '📋', module: 'fitness', owns: [] },
-  { to: '/entrenar', label: 'Entrenar', icon: '⏱️', module: 'fitness', owns: [] },
-  { to: '/bienestar', label: 'Bienestar', icon: '🌿', module: null, owns: ['/kegel', '/mindfulness'] },
+  { to: '/', label: 'Ejercicios', icon: 'dumbbell', owns: ['/biblioteca', '/ejercicio/', '/programas', '/historial'] },
+  { to: '/rutinas', label: 'Rutinas', icon: 'list', owns: [] },
+  { to: '/entrenar', label: 'Entrenar', icon: 'stopwatch', owns: [] },
+  { to: '/bienestar', label: 'Bienestar', icon: 'leaf', owns: ['/kegel', '/mindfulness'] },
 ]
 
 function isActive(item: NavItem, pathname: string): boolean {
@@ -41,7 +36,7 @@ export default function BottomNav() {
   const { pathname } = useLocation()
 
   return (
-    <nav className="sticky bottom-0 z-20 flex border-t border-white/10 bg-[#0b0d12]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    <nav className="material hairline-t sticky bottom-0 z-20 flex pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
         const active = isActive(item, pathname)
         return (
@@ -49,15 +44,12 @@ export default function BottomNav() {
             key={item.to}
             to={item.to}
             aria-current={active ? 'page' : undefined}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs"
-            // El activo toma el color de su módulo: la app se tiñe según dónde
-            // estás parado, sin necesidad de leer la etiqueta.
-            style={{
-              color: active ? (item.module ? MODULE_THEMES[item.module].textHex : '#e5e7eb') : '#9ca3af',
-            }}
+            className={`flex h-[49px] flex-1 flex-col items-center justify-center gap-[3px] pt-1 ${
+              active ? 'text-fit-400' : 'text-[#8e8e93]'
+            }`}
           >
-            <span className="text-lg leading-none">{item.icon}</span>
-            {item.label}
+            <Icon name={item.icon} size={25} strokeWidth={active ? 2.2 : 1.9} />
+            <span className="text-[10px] font-medium leading-none tracking-[0.01em]">{item.label}</span>
           </Link>
         )
       })}

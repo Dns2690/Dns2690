@@ -549,7 +549,7 @@ export const FULLBODY_GYM: ProgramInfo = {
   id: 'fullbody-gym',
   name: 'Cuerpo completo con equipo',
   tagline: 'Full body todo el año, aprovechando máquinas y barra del gimnasio',
-  icon: '🏋️',
+  icon: 'dumbbell',
   equipment: 'Gimnasio: máquinas, Smith, mancuernas y barra',
   months: MONTHS,
 }

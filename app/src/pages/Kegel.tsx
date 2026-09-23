@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import TopBar from '../components/TopBar'
+import TopBar, { BarButton } from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Placeholder, Row, Section, Stat } from '../components/ui'
 import {
   ADHERENCE_WINDOW_DAYS,
   computeStats,
@@ -26,7 +27,6 @@ function daysBetween(fromIso: string, to: Date): number {
 }
 
 export default function Kegel() {
-  const navigate = useNavigate()
   const [settings, setSettings] = useState<KegelSettings | null>(null)
   const [sessions, setSessions] = useState<KegelSession[] | null>(null)
   const [tests, setTests] = useState<KegelTest[]>([])
@@ -92,8 +92,8 @@ export default function Kegel() {
   if (!settings || sessions === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Kegel" back />
-        <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+        <TopBar title="Kegel" back="Bienestar" large />
+        <Placeholder>Cargando…</Placeholder>
       </div>
     )
   }
@@ -102,90 +102,82 @@ export default function Kegel() {
   const monthLabel = new Date().toLocaleDateString('es', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar
-        title="Kegel"
-        back
-        right={
-          <Link to="/ajustes" className="rounded-lg px-2 py-1 text-lg active:bg-white/10" aria-label="Ajustes">
-            ⚙️
-          </Link>
-        }
-      />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Kegel" back="Bienestar" large right={<BarButton icon="gear" label="Ajustes" to="/ajustes" />} />
 
-      <div className="flex flex-col gap-3 p-4">
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-sm text-gray-500">Hoy · nivel {level.label}</p>
-            {streak > 0 && <p className="text-sm text-rose-400">🔥 {streak} {streak === 1 ? 'día' : 'días'}</p>}
-          </div>
-          <p className="mt-1 text-2xl font-bold text-gray-100">
-            {todayCount}
-            <span className="text-base font-normal text-gray-500"> / {DAILY_ROUTINE_GOAL} rutinas</span>
-          </p>
-          <div className="mt-3 flex gap-1.5">
-            {Array.from({ length: DAILY_ROUTINE_GOAL }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 flex-1 rounded-full ${i < todayCount ? 'bg-rose-400' : 'bg-white/10'}`}
-              />
-            ))}
+      <div className="flex flex-col gap-7">
+        <div className="px-4">
+          <div className="rounded-2xl bg-cell p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[15px] font-semibold text-kegel-400">Hoy · {level.label}</p>
+              {streak > 0 && (
+                <p className="flex items-center gap-1 text-[15px] font-semibold text-label">
+                  <Icon name="flame" size={17} className="text-kegel-400" />
+                  {streak} {streak === 1 ? 'día' : 'días'}
+                </p>
+              )}
+            </div>
+            <p className="mt-1 text-[34px] font-bold leading-tight tracking-tight tabular-nums text-label">
+              {todayCount}
+              <span className="text-[20px] font-semibold text-label-2"> de {DAILY_ROUTINE_GOAL} rutinas</span>
+            </p>
+            <div className="mt-3 flex gap-1.5">
+              {Array.from({ length: DAILY_ROUTINE_GOAL }).map((_, i) => (
+                <div key={i} className={`h-1.5 flex-1 rounded-full ${i < todayCount ? 'bg-kegel-500' : 'bg-cell-2'}`} />
+              ))}
+            </div>
+            <div className="mt-4">
+              <Button tone="kegel" icon="play" to="/kegel/rutina">
+                Iniciar rutina
+              </Button>
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={() => navigate('/kegel/rutina')}
-          className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
-        >
-          Iniciar rutina
-        </button>
-
         {suggestedLevel && (
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
-            <p className="text-sm font-medium text-rose-300">🚀 Venís cumpliendo la meta</p>
-            <p className="mt-1 text-sm text-gray-400">
-              Cumpliste tu objetivo la mayoría de los últimos {LEVEL_UP_WINDOW_DAYS} días. ¿Subimos a{' '}
-              {getLevel(suggestedLevel).label}?
-            </p>
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => applyLevelUp(true)}
-                className="flex-1 rounded-lg bg-rose-500 py-2 text-sm font-medium text-[#0b0d12] active:bg-rose-400"
-              >
-                Subir
-              </button>
-              <button
-                onClick={() => applyLevelUp(false)}
-                className="flex-1 rounded-lg bg-white/10 py-2 text-sm font-medium text-gray-100 active:bg-white/20"
-              >
-                Quedarme
-              </button>
+          <Section>
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <IconTile name="arrow-up" tone="kegel" />
+                <p className="text-[17px] font-semibold text-label">Venís cumpliendo la meta</p>
+              </div>
+              <p className="mt-2 text-[15px] leading-snug text-label-2">
+                Cumpliste tu objetivo la mayoría de los últimos {LEVEL_UP_WINDOW_DAYS} días. ¿Subimos a{' '}
+                {getLevel(suggestedLevel).label}?
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button tone="kegel" size="md" onClick={() => applyLevelUp(true)}>
+                  Subir
+                </Button>
+                <Button tone="gray" size="md" onClick={() => applyLevelUp(false)}>
+                  Quedarme
+                </Button>
+              </div>
             </div>
-          </div>
+          </Section>
         )}
 
         {testDue && (
-          <Link
-            to="/kegel/test"
-            className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 active:bg-amber-500/20"
-          >
-            <p className="text-sm font-medium text-amber-300">🏔️ Toca el test mensual</p>
-            <p className="mt-1 text-sm text-gray-400">
-              {lastTest
-                ? `Pasaron ${daysBetween(lastTest.date, new Date())} días desde el último. Medí tu contracción máxima para ver el avance real.`
-                : 'Medí cuánto aguantás una contracción máxima. Es tu punto de partida.'}
-            </p>
-          </Link>
+          <Section>
+            <Row
+              to="/kegel/test"
+              icon="mountain"
+              tone="warn"
+              title="Toca el test mensual"
+              wrap
+              subtitle={
+                lastTest
+                  ? `Pasaron ${daysBetween(lastTest.date, new Date())} días desde el último. Medí tu contracción máxima.`
+                  : 'Medí cuánto aguantás una contracción máxima. Es tu punto de partida.'
+              }
+            />
+          </Section>
         )}
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-sm text-gray-400 first-letter:uppercase">{monthLabel}</p>
-            <p className="text-sm text-gray-600">{DAILY_ROUTINE_GOAL} rutinas = día completo</p>
-          </div>
-          <div className="mt-3 grid grid-cols-7 gap-1.5">
+        <Section header={monthLabel} footer={`Día completo = ${DAILY_ROUTINE_GOAL} rutinas.`}>
+          <div className="grid grid-cols-7 gap-y-1.5 p-3">
             {WEEKDAYS.map((d, i) => (
-              <span key={i} className="text-center text-xs text-gray-600">
+              <span key={i} className="pb-1 text-center text-[13px] font-semibold text-label-3">
                 {d}
               </span>
             ))}
@@ -196,115 +188,90 @@ export default function Kegel() {
               const day = Number(key.slice(8))
               const fill =
                 count >= DAILY_ROUTINE_GOAL
-                  ? 'bg-rose-400 text-[#0b0d12] font-semibold'
+                  ? 'bg-kegel-500 text-black font-semibold'
                   : count > 0
-                    ? 'bg-rose-400/30 text-gray-100'
-                    : 'bg-white/5 text-gray-600'
+                    ? 'bg-kegel-500/25 text-label'
+                    : isToday
+                      ? 'text-kegel-400 font-semibold'
+                      : 'text-label-2'
               return (
-                <span
-                  key={key}
-                  className={`flex aspect-square items-center justify-center rounded-md text-sm ${fill} ${
-                    isToday ? 'ring-1 ring-rose-400' : ''
-                  }`}
-                >
-                  {day}
+                <span key={key} className="flex justify-center">
+                  <span
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-[17px] tabular-nums ${fill} ${
+                      isToday && count < DAILY_ROUTINE_GOAL ? 'ring-2 ring-kegel-500 ring-inset' : ''
+                    }`}
+                  >
+                    {day}
+                  </span>
                 </span>
               )
             })}
           </div>
-        </div>
+        </Section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Link to="/kegel/progreso" className="rounded-xl bg-white/5 p-3 active:bg-white/10">
-            <p className="text-sm text-gray-400">📈 Progreso</p>
-            <p className="mt-1 text-lg font-semibold text-gray-100">
-              {lastTest ? lastTest.seconds : '—'}
-              <span className="ml-1 text-sm font-normal text-gray-500">s</span>
-            </p>
-            <p className="text-sm text-gray-500">contracción máxima</p>
-          </Link>
-          <Link to="/kegel/test" className="rounded-xl bg-white/5 p-3 active:bg-white/10">
-            <p className="text-sm text-gray-400">🏔️ Test</p>
-            <p className="mt-1 text-lg font-semibold text-gray-100">Medir</p>
-            <p className="text-sm text-gray-500">contracción máxima</p>
-          </Link>
-        </div>
+        <Section header="Contracción máxima">
+          <Row
+            to="/kegel/progreso"
+            icon="trend"
+            tone="kegel"
+            title="Progreso"
+            detail={lastTest ? `${lastTest.seconds} s` : '—'}
+          />
+          <Row to="/kegel/test" icon="mountain" tone="kegel" title="Hacer el test" />
+        </Section>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-lg font-bold text-gray-100">📋 Tu entrenamiento</p>
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {[
-              { value: stats.trainingDays, label: 'Días entrenados' },
-              { value: stats.sessions, label: 'Rutinas totales' },
-              { value: stats.streak, label: 'Días seguidos' },
-              { value: tests.length, label: 'Tests hechos' },
-            ].map((tile) => (
-              <div key={tile.label} className="rounded-xl bg-white/5 p-4 text-center">
-                <p className="text-3xl font-bold text-white">{tile.value}</p>
-                <p className="mt-1 text-sm text-gray-400">{tile.label}</p>
+        <Section header="Tu entrenamiento">
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+              <Stat label="Días entrenados" value={stats.trainingDays} />
+              <Stat label="Rutinas" value={stats.sessions} />
+              <Stat label="Días seguidos" value={stats.streak} />
+              <Stat label="Tests" value={tests.length} />
+            </div>
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between">
+                <p className="text-[15px] text-label">Constancia</p>
+                <p className="text-[17px] font-semibold tabular-nums text-label">{stats.adherencePercent}%</p>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-3 rounded-xl bg-white/5 p-4">
-            <div className="flex items-baseline justify-between">
-              <p className="text-base text-gray-300">Días entrenados</p>
-              <p className="text-lg font-bold text-white">{stats.adherencePercent}%</p>
-            </div>
-            <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${stats.adherencePercent}%`,
-                  background: 'linear-gradient(to right, #0e7490, #22d3ee)',
-                }}
-              />
-            </div>
-            <div className="mt-1.5 flex justify-between text-sm text-gray-600">
-              <span>0</span>
-              <span>últimos {ADHERENCE_WINDOW_DAYS} días</span>
-              <span>100</span>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-cell-2">
+                <div className="h-full rounded-full bg-kegel-500" style={{ width: `${stats.adherencePercent}%` }} />
+              </div>
+              <p className="mt-1.5 text-[13px] text-label-2">Días entrenados de los últimos {ADHERENCE_WINDOW_DAYS}.</p>
             </div>
           </div>
-        </div>
+        </Section>
 
-        <div className="flex flex-col gap-2">
-          <p className="px-1 text-sm text-gray-500">Ejercicios · tocá uno para probarlo solo</p>
+        <Section
+          header="Ejercicios"
+          footer="Tocá uno para probarlo solo, en nivel Principiante. Los ejercicios de piso pélvico son seguros y de práctica habitual, pero si sentís dolor o molestia persistente, consultá con un kinesiólogo de piso pélvico."
+        >
           {KEGEL_EXERCISES.map((ex) => {
             const locked = getLevel(ex.minLevel).rank > level.rank
-              return (
-                // Tocar un ejercicio lo corre solo, en nivel Principiante. Sirve
-                // para depurarlos de a uno, así que los bloqueados también se
-                // pueden probar.
-                <Link
-                  key={ex.id}
-                  to={`/kegel/demo/${ex.id}`}
-                  className="flex items-center gap-3 rounded-xl bg-white/5 p-3 active:bg-white/10"
-                >
-                  <span className={`text-xl ${locked ? 'opacity-50' : ''}`}>{ex.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-sm font-medium text-gray-100">{ex.name}</p>
-                      {locked && (
-                        <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-xs text-gray-400">
-                          {getLevel(ex.minLevel).label}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500">{ex.description}</p>
-                  </div>
-                  <span className="shrink-0 text-sm text-rose-400">Probar</span>
-                </Link>
-              )
+            return (
+              // Tocar un ejercicio lo corre solo, en nivel Principiante. Sirve
+              // para depurarlos de a uno, así que los bloqueados también se
+              // pueden probar.
+              <Row
+                key={ex.id}
+                to={`/kegel/demo/${ex.id}`}
+                icon={ex.icon}
+                tone={locked ? 'gray' : 'kegel'}
+                title={
+                  <span className="flex items-center gap-2">
+                    {ex.name}
+                    {locked && (
+                      <span className="rounded-md bg-cell-2 px-1.5 py-px text-[12px] font-medium text-label-2">
+                        {getLevel(ex.minLevel).label}
+                      </span>
+                    )}
+                  </span>
+                }
+                subtitle={ex.description}
+                wrap
+              />
+            )
           })}
-        </div>
-
-        <p className="px-1 text-sm leading-relaxed text-gray-600">
-          Los ejercicios de piso pélvico son seguros y de práctica habitual, pero si sentís dolor o molestia
-          persistente, consultá con un kinesiólogo de piso pélvico. Esta app guía el ritmo, no reemplaza criterio
-          clínico.
-        </p>
+        </Section>
       </div>
     </div>
   )

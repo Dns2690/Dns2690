@@ -23,18 +23,23 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
  * árbol desincronizaría la luz del número.
  */
 /**
- * El modo de alargamiento (Reverse Kegel) usa violeta en vez de cyan. No es
- * decoración: confundir un Reverse Kegel con uno normal invierte el efecto del
- * ejercicio, así que la diferencia tiene que verse de un vistazo.
+ * Contraer es azul (el color de Kegel) y alargar es lavanda. No es decoración:
+ * confundir un Reverse Kegel con uno normal invierte el efecto del ejercicio,
+ * así que la diferencia tiene que verse de un vistazo, también para un
+ * daltónico. Por eso no es el morado de iOS: contra el azul se confunde en
+ * protanopía (ΔE 4.3); el lavanda, más claro, separa ΔE 9.3.
+ *
+ * La respiración de Mindfulness usa el morado del módulo: ahí no hay azul al
+ * lado con el que confundirlo, y la familia violeta significa "aflojar" en
+ * toda la app.
  */
 const MODE_GRADIENT: Record<'contract' | 'lengthen' | 'breath', string> = {
   contract:
-    'radial-gradient(circle, rgba(251,113,133,0.95) 0%, rgba(244,63,94,0.85) 42%, rgba(190,18,60,0.45) 66%, rgba(244,63,94,0) 78%)',
+    'radial-gradient(circle, rgba(94,170,255,0.95) 0%, rgba(10,132,255,0.85) 42%, rgba(0,88,208,0.45) 66%, rgba(10,132,255,0) 78%)',
   lengthen:
-    'radial-gradient(circle, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.85) 42%, rgba(124,58,237,0.45) 66%, rgba(167,139,250,0) 78%)',
-  // Mindfulness comparte el violeta: en toda la app significa aflojar.
+    'radial-gradient(circle, rgba(236,196,255,0.95) 0%, rgba(218,143,255,0.85) 42%, rgba(176,98,230,0.45) 66%, rgba(218,143,255,0) 78%)',
   breath:
-    'radial-gradient(circle, rgba(167,139,250,0.9) 0%, rgba(139,92,246,0.72) 44%, rgba(109,40,217,0.38) 68%, rgba(139,92,246,0) 80%)',
+    'radial-gradient(circle, rgba(212,154,246,0.9) 0%, rgba(191,90,242,0.72) 44%, rgba(140,50,200,0.38) 68%, rgba(191,90,242,0) 80%)',
 }
 
 const KegelGuide = forwardRef<
@@ -100,7 +105,7 @@ const KegelGuide = forwardRef<
         <circle ref={dotRef} cx={100} cy={100 - RADIUS} r={6} fill="#ffffff" />
       </svg>
 
-      <div className="relative flex h-[184px] w-[184px] flex-col items-center justify-center rounded-full bg-[#0b0d12] text-center">
+      <div className="relative flex h-[184px] w-[184px] flex-col items-center justify-center rounded-full bg-black text-center">
         {children}
       </div>
     </div>

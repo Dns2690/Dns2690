@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import ExercisePicker from '../components/ExercisePicker'
+import Icon from '../components/Icon'
+import { Button, Placeholder, Row, Section } from '../components/ui'
 import { getExercise, imageUrl } from '../lib/exercises'
 import {
+  deleteRoutine,
   deleteRoutineDraft,
   getRoutine,
   getRoutineDraft,
@@ -129,95 +132,120 @@ export default function RoutineEditor() {
     navigate('/rutinas')
   }
 
+  async function handleDelete() {
+    if (isNew || !confirm('¿Eliminar esta rutina?')) return
+    await deleteRoutine(id!)
+    navigate('/rutinas', { replace: true })
+  }
+
   if (!loaded) {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Rutina" back />
-        <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+        <Placeholder>Cargando…</Placeholder>
       </div>
     )
   }
 
-  return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title={isNew ? 'Nueva rutina' : 'Editar rutina'} back />
+  const fieldClass =
+    'h-8 rounded-lg bg-cell-2 px-2 text-center text-[17px] tabular-nums text-label focus:outline-none focus:ring-2 focus:ring-fit-500'
 
-      <div className="flex flex-col gap-3 p-4">
+  return (
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title={isNew ? 'Nueva rutina' : 'Editar rutina'} back="Rutinas" />
+
+      <div className="flex flex-col gap-7 pt-4">
         {restored && (
-          <div className="flex items-center gap-3 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-200">
-            <span className="flex-1">Recuperamos lo que tenías sin guardar.</span>
-            <button type="button" onClick={discardDraft} className="font-medium underline">
-              Descartar
-            </button>
+          <div className="px-4">
+            <div className="flex items-center gap-3 rounded-xl bg-fit-500/12 px-4 py-3">
+              <Icon name="clock" size={20} className="shrink-0 text-fit-400" />
+              <span className="flex-1 text-[15px] text-label">Recuperamos lo que tenías sin guardar.</span>
+              <button type="button" onClick={discardDraft} className="text-[15px] font-semibold text-fit-400 active:opacity-50">
+                Descartar
+              </button>
+            </div>
           </div>
         )}
 
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre de la rutina (ej. Día de pierna)"
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500"
-        />
+        <Section>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nombre de la rutina (ej. Día de pierna)"
+            className="h-11 w-full bg-transparent px-4 text-[17px] text-label placeholder:text-label-3 focus:outline-none"
+          />
+        </Section>
 
-        <div className="flex flex-col gap-2">
+        <Section header="Ejercicios" footer={items.length ? 'Tocá la imagen para ver cómo se hace.' : undefined}>
           {items.map((it, i) => {
             const ex = getExercise(it.exerciseId)
             if (!ex) return null
             return (
-              <div key={i} className="flex items-center gap-2 rounded-xl bg-white/5 p-2">
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5" style={{ ['--sep-inset' as string]: '76px' }}>
                 <button
                   type="button"
                   onClick={() => navigate(`/ejercicio/${ex.id}`)}
-                  className="flex-shrink-0"
+                  className="shrink-0 active:opacity-60"
                   aria-label={`Ver ${ex.name}`}
                 >
-                  <img src={imageUrl(ex)} alt="" className="h-12 w-12 rounded-lg bg-white/10 object-cover" />
+                  <img src={imageUrl(ex)} alt="" className="h-12 w-12 rounded-lg bg-white object-cover" />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm capitalize text-gray-100">{ex.name}</p>
-                  <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                  <p className="truncate text-[17px] capitalize text-label">{ex.name}</p>
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[15px] text-label-2">
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={1}
                       value={it.targetSets}
                       onChange={(e) => updateItem(i, { targetSets: Number(e.target.value) || 1 })}
-                      className="w-12 rounded border border-white/10 bg-white/5 px-1 py-0.5 text-center text-gray-100"
+                      aria-label="Series"
+                      className={`w-11 ${fieldClass}`}
                     />
                     <span>series ×</span>
                     <input
                       value={it.targetReps}
                       onChange={(e) => updateItem(i, { targetReps: e.target.value })}
-                      className="w-16 rounded border border-white/10 bg-white/5 px-1 py-0.5 text-center text-gray-100"
+                      aria-label="Repeticiones"
+                      className={`w-16 ${fieldClass}`}
                     />
                     <span>reps</span>
                   </div>
                 </div>
                 <button
                   onClick={() => removeItem(i)}
-                  className="px-2 text-red-400"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center active:opacity-50"
                   aria-label="Quitar ejercicio"
                 >
-                  ✕
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-danger-500 text-white">
+                    <span className="h-[2.5px] w-2.5 rounded-full bg-white" />
+                  </span>
                 </button>
               </div>
             )
           })}
+          <Row
+            onClick={openPicker}
+            leading={
+              <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-fit-500 text-black">
+                <Icon name="plus" size={14} strokeWidth={3} />
+              </span>
+            }
+            title={<span className="text-fit-400">Agregar ejercicio</span>}
+          />
+        </Section>
+
+        <div className="px-4">
+          <Button onClick={handleSave} disabled={!name.trim() || items.length === 0}>
+            Guardar rutina
+          </Button>
         </div>
 
-        <button
-          onClick={openPicker}
-          className="rounded-lg border border-dashed border-white/20 py-2.5 text-sm text-gray-300 active:bg-white/10"
-        >
-          + Agregar ejercicio
-        </button>
-
-        <button
-          onClick={handleSave}
-          disabled={!name.trim() || items.length === 0}
-          className="mt-2 rounded-lg bg-cyan-500 py-2.5 text-sm font-medium text-[#0b0d12] disabled:opacity-40"
-        >
-          Guardar rutina
-        </button>
+        {!isNew && (
+          <Section>
+            <Row onClick={handleDelete} title="Eliminar rutina" destructive />
+          </Section>
+        )}
       </div>
 
       {pickerOpen && <ExercisePicker onSelect={(e) => addExercise(e.id)} onClose={closePicker} />}

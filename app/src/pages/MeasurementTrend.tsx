@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import { Placeholder, Row, Section } from '../components/ui'
 import TrendChart from '../components/TrendChart'
 import { listMeasurements } from '../lib/store'
 import { DERIVED_METRICS, derivedSeries, METRICS, metricSeries } from '../lib/measurements'
@@ -26,7 +27,7 @@ export default function MeasurementTrend() {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Medidas" back />
-        <p className="p-6 text-center text-sm text-gray-500">Métrica no encontrada.</p>
+        <Placeholder>Métrica no encontrada.</Placeholder>
       </div>
     )
   }
@@ -34,38 +35,40 @@ export default function MeasurementTrend() {
   if (entries === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title={config.label} back />
-        <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+        <TopBar title={config.label} back="Medidas" large />
+        <Placeholder>Cargando…</Placeholder>
       </div>
     )
   }
 
-  const series = raw
-    ? metricSeries(entries, raw.key)
-    : derivedSeries(entries, derived!.key)
+  const series = raw ? metricSeries(entries, raw.key) : derivedSeries(entries, derived!.key)
   const chronological = [...series].reverse()
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title={`${config.icon} ${config.label}`} back />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title={config.label} back="Medidas" large />
 
-      <div className="flex flex-col gap-4 p-4">
-        <div className="rounded-2xl bg-white/5 p-4">
-          <TrendChart series={series} unit={config.unit} />
-        </div>
+      <div className="flex flex-col gap-7">
+        <Section>
+          <div className="p-4">
+            <TrendChart series={series} unit={config.unit} />
+          </div>
+        </Section>
 
         {series.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="px-1 text-xs text-gray-500">Todos los valores</p>
+          <Section header="Todos los valores">
             {chronological.map((p, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-sm">
-                <span className="text-gray-400">{formatDate(p.date)}</span>
-                <span className="text-gray-100">
-                  {p.value} {config.unit}
-                </span>
-              </div>
+              <Row
+                key={i}
+                title={formatDate(p.date)}
+                detail={
+                  <span className="tabular-nums text-label">
+                    {p.value} {config.unit}
+                  </span>
+                }
+              />
             ))}
-          </div>
+          </Section>
         )}
       </div>
     </div>

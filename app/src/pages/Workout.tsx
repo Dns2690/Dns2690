@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Placeholder, Row, Section } from '../components/ui'
 import { listRoutines, listSessions } from '../lib/store'
 import { startSession, startSessionFromRoutine } from '../lib/workout'
 import type { Routine, WorkoutSession } from '../lib/types'
@@ -39,49 +41,72 @@ export default function Workout() {
   if (searchParams.get('rutina')) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Entrenar" />
-        <p className="p-6 text-center text-sm text-gray-500">Preparando entrenamiento…</p>
+        <TopBar title="Entrenar" large />
+        <Placeholder>Preparando entrenamiento…</Placeholder>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <TopBar title="Entrenar" />
-      <div className="flex flex-col gap-3 p-4">
-        {active && (
-          <button
-            onClick={() => navigate(`/entrenar/${active.id}`)}
-            className="rounded-lg bg-amber-400 py-2.5 text-sm font-medium text-[#0b0d12] active:bg-amber-300"
-          >
-            Continuar entrenamiento en curso — {active.routineName}
-          </button>
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Entrenar" large />
+
+      <div className="flex flex-col gap-7">
+        {active ? (
+          <div className="px-4">
+            <div className="rounded-2xl bg-cell p-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-warn-500/20 px-2.5 py-0.5 text-[13px] font-semibold text-warn-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-warn-400" />
+                En curso
+              </span>
+              <p className="mt-2 text-[22px] font-bold leading-tight tracking-tight text-label">{active.routineName}</p>
+              <p className="mt-1 text-[15px] text-label-2">
+                Empezaste a las{' '}
+                {new Date(active.startedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <div className="mt-4 flex flex-col gap-2.5">
+                <Button icon="play" onClick={() => navigate(`/entrenar/${active.id}`)}>
+                  Continuar entrenamiento
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="px-4">
+            <Button icon="plus" onClick={handleFreeform}>
+              Entrenamiento libre
+            </Button>
+            <p className="mt-2 px-4 text-center text-[13px] text-label-2">
+              Arrancás vacío y vas sumando ejercicios sobre la marcha.
+            </p>
+          </div>
         )}
 
-        <button
-          onClick={handleFreeform}
-          className="rounded-lg border border-white/20 py-2.5 text-sm text-gray-200 active:bg-white/10"
+        <Section
+          header="Desde una rutina"
+          footer={routines.length === 0 ? 'Todavía no tenés rutinas. Armá una en la pestaña Rutinas.' : undefined}
         >
-          + Entrenamiento libre
-        </button>
+          {routines.length === 0 ? (
+            <Row to="/rutinas/nueva" icon="plus" title={<span className="text-fit-400">Crear una rutina</span>} />
+          ) : (
+            routines.map((r) => (
+              <Row
+                key={r.id}
+                onClick={() => handleFromRoutine(r.id)}
+                leading={<IconTile name="list" />}
+                title={r.name}
+                subtitle={`${r.exercises.length} ${r.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}`}
+                trailing={<Icon name="play" size={18} className="shrink-0 text-fit-400" />}
+              />
+            ))
+          )}
+        </Section>
 
-        <h2 className="mt-2 text-sm font-semibold text-gray-300">Empezar desde una rutina</h2>
-        {routines.length === 0 && (
-          <p className="text-sm text-gray-500">No tenés rutinas todavía. Creá una en la pestaña Rutinas.</p>
+        {active && (
+          <Section>
+            <Row onClick={handleFreeform} title={<span className="text-fit-400">Empezar otro entrenamiento libre</span>} />
+          </Section>
         )}
-        {routines.map((r) => (
-          <button
-            key={r.id}
-            onClick={() => handleFromRoutine(r.id)}
-            className="flex items-center justify-between rounded-xl bg-white/5 p-3 text-left active:bg-white/10"
-          >
-            <span>
-              <p className="text-sm font-medium text-gray-100">{r.name}</p>
-              <p className="text-xs text-gray-500">{r.exercises.length} ejercicios</p>
-            </span>
-            <span className="text-cyan-400">▶</span>
-          </button>
-        ))}
       </div>
     </div>
   )

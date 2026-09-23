@@ -1,52 +1,50 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
 import { PROGRAMS } from '../data/programs'
-import { listSessions, getProfile } from '../lib/store'
+import { listSessions } from '../lib/store'
 import { computeProgress, TOTAL_SESSIONS } from '../lib/program'
-import type { Profile, WorkoutSession } from '../lib/types'
+import type { WorkoutSession } from '../lib/types'
 
 export default function ProgramsList() {
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     listSessions().then(setSessions)
-    getProfile().then((p) => setProfile(p ?? null))
   }, [])
 
   return (
-    <div className="flex flex-1 flex-col">
-      <TopBar title="Programas" back />
-      <div className="flex flex-col gap-3 p-4">
-        {profile && (
-          <p className="px-1 text-sm text-gray-200">
-            Hola {profile.name} {profile.avatar}
-          </p>
-        )}
-        <p className="px-1 text-xs text-gray-500">
-          Programas guiados de 1 año, 3 sesiones por semana. Elegí uno para ver tu progreso o empezar.
-        </p>
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Programas" back="Ejercicios" large />
+      <p className="px-4 pb-4 text-[15px] leading-snug text-label-2">
+        Un año guiado, tres sesiones por semana. Elegí uno para ver tu progreso o empezar.
+      </p>
+
+      <div className="flex flex-col gap-3 px-4">
         {PROGRAMS.map((p) => {
           const completed = sessions ? computeProgress(sessions, p.id).completedCount : 0
           const percent = Math.round((Math.min(completed, TOTAL_SESSIONS) / TOTAL_SESSIONS) * 100)
           return (
-            <Link key={p.id} to={`/programas/${p.id}`} className="rounded-2xl bg-white/5 p-4 active:bg-white/10">
+            <Link key={p.id} to={`/programas/${p.id}`} className="rounded-xl bg-cell p-4 active:bg-press">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{p.icon}</span>
+                <IconTile name={p.icon} size="md" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-100">{p.name}</p>
-                  <p className="text-xs text-gray-400">{p.tagline}</p>
+                  <p className="truncate text-[17px] font-semibold text-label">{p.name}</p>
+                  <p className="truncate text-[15px] text-label-2">{p.tagline}</p>
                 </div>
+                <Icon name="chevron-right" size={18} strokeWidth={2.4} className="-mr-1 shrink-0 text-label-3" />
               </div>
-              <p className="mt-2 text-[11px] text-gray-500">{p.equipment}</p>
+              <p className="mt-3 text-[13px] leading-snug text-label-2">{p.equipment}</p>
               {sessions && (
-                <>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full rounded-full bg-cyan-400" style={{ width: `${percent}%` }} />
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-cell-2">
+                    <div className="h-full rounded-full bg-fit-500" style={{ width: `${percent}%` }} />
                   </div>
-                  <p className="mt-1 text-[11px] text-gray-500">{completed}/{TOTAL_SESSIONS} sesiones</p>
-                </>
+                  <span className="text-[13px] tabular-nums text-label-2">
+                    {completed}/{TOTAL_SESSIONS}
+                  </span>
+                </div>
               )}
             </Link>
           )

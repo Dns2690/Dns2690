@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import { Placeholder, Row, Section } from '../components/ui'
 import { bodyPartLabel, equipmentLabel, getExercise, gifUrl } from '../lib/exercises'
 import { listSessions } from '../lib/store'
 import type { WorkoutSession } from '../lib/types'
@@ -41,73 +42,76 @@ export default function ExerciseDetail() {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Ejercicio" back />
-        <p className="p-6 text-center text-sm text-gray-500">Ejercicio no encontrado.</p>
+        <Placeholder>Ejercicio no encontrado.</Placeholder>
       </div>
     )
   }
 
+  const steps = exercise.instruction_steps_es
+
   return (
-    <div className="flex flex-1 flex-col pb-6">
+    <div className="flex flex-1 flex-col pb-8">
       <TopBar title={exercise.name} back />
 
-      <img
-        src={gifUrl(exercise)}
-        alt={exercise.name}
-        className="mx-auto mt-4 h-48 w-48 rounded-2xl bg-white/5 object-contain"
-      />
-
-      <div className="flex flex-wrap justify-center gap-2 px-4 py-3">
-        <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs text-cyan-300">
-          {bodyPartLabel(exercise.body_part)}
-        </span>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-gray-300">
-          {equipmentLabel(exercise.equipment)}
-        </span>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-gray-300 capitalize">
-          Músculo: {exercise.target}
-        </span>
+      {/* Las animaciones vienen sobre fondo blanco: se muestran en una tarjeta
+          blanca a lo ancho en vez de pelearse con el negro. */}
+      <div className="px-4 pt-2">
+        <div className="overflow-hidden rounded-2xl bg-white">
+          <img src={gifUrl(exercise)} alt={exercise.name} className="mx-auto aspect-square w-full max-w-[320px] object-contain" />
+        </div>
+        <h1 className="mt-4 text-[28px] font-bold capitalize leading-tight tracking-tight text-label">{exercise.name}</h1>
       </div>
 
-      {exercise.secondary_muscles.length > 0 && (
-        <p className="px-4 text-center text-xs text-gray-500">
-          Músculos secundarios: {exercise.secondary_muscles.join(', ')}
-        </p>
-      )}
+      <div className="mt-6 flex flex-col gap-7">
+        <Section>
+          <Row title="Zona" detail={bodyPartLabel(exercise.body_part)} />
+          <Row title="Equipo" detail={equipmentLabel(exercise.equipment)} />
+          <Row title="Músculo" detail={<span className="capitalize">{exercise.target}</span>} />
+          {exercise.secondary_muscles.length > 0 && (
+            <Row
+              title="Secundarios"
+              detail={<span className="block max-w-[55vw] truncate capitalize">{exercise.secondary_muscles.join(', ')}</span>}
+            />
+          )}
+        </Section>
 
-      <section className="mt-4 px-4">
-        <h2 className="mb-2 text-sm font-semibold text-gray-200">Instrucciones</h2>
-        {exercise.instruction_steps_es.length > 0 ? (
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-300">
-            {exercise.instruction_steps_es.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        ) : (
-          <p className="text-sm text-gray-300">{exercise.instructions_es}</p>
-        )}
-      </section>
-
-      {progress.length > 0 && (
-        <section className="mt-6 px-4">
-          <h2 className="mb-2 text-sm font-semibold text-gray-200">Tu progreso</h2>
-          <div className="flex flex-col gap-2">
-            {progress.map((p, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-sm">
-                <span className="text-gray-400">{new Date(p.date).toLocaleDateString('es')}</span>
-                <span className="text-gray-200">
-                  {p.sets.map((s, j) => (
-                    <span key={j} className="ml-2">
-                      {s.weight ?? '-'}kg×{s.reps ?? '-'}
+        <Section header="Cómo se hace">
+          <div className="p-4">
+            {steps.length > 0 ? (
+              <ol className="flex flex-col gap-3">
+                {steps.map((step, i) => (
+                  <li key={i} className="flex gap-3 text-[15px] leading-relaxed text-label">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fit-500 text-[13px] font-bold text-black">
+                      {i + 1}
                     </span>
-                  ))}
-                </span>
-              </div>
-            ))}
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-[15px] leading-relaxed text-label">{exercise.instructions_es}</p>
+            )}
           </div>
-        </section>
-      )}
+        </Section>
 
-      <p className="mt-8 px-4 text-center text-[11px] text-gray-600">{exercise.attribution}</p>
+        {progress.length > 0 && (
+          <Section header="Tu progreso">
+            {progress.map((p, i) => (
+              <Row
+                key={i}
+                title={new Date(p.date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+                detail={
+                  <span className="text-[15px] tabular-nums">
+                    {p.sets.map((s) => `${s.weight ?? '–'}×${s.reps ?? '–'}`).join('  ')}
+                  </span>
+                }
+              />
+            ))}
+          </Section>
+        )}
+
+        <p className="px-8 text-center text-[11px] text-label-3">{exercise.attribution}</p>
+      </div>
     </div>
   )
 }

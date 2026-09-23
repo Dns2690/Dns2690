@@ -1,10 +1,13 @@
+import Icon from './Icon'
+
 /**
  * Comparación de dos mediciones: la anterior contra la actual.
  *
  * Las barras se escalan contra el mayor de los dos valores y arrancan en cero,
  * así la diferencia de altura es proporcional a la diferencia real. Una sola
  * serie no lleva leyenda: el título ya dice qué se mide, y cada barra tiene su
- * etiqueta al pie.
+ * etiqueta al pie. El texto va en tinta, no en el color de la barra; el cambio
+ * lleva flecha además de color, para que no dependa solo de él.
  */
 export default function CompareBars({
   previous,
@@ -12,18 +15,18 @@ export default function CompareBars({
   unit,
   previousLabel = 'Antes',
   currentLabel = 'Ahora',
-  accent = '#22d3ee',
+  color = '#3cff73',
 }: {
   previous: number
   current: number
   unit: string
   previousLabel?: string
   currentLabel?: string
-  /** Color del módulo dueño del gráfico. */
-  accent?: string
+  /** Acento del módulo dueño del gráfico. */
+  color?: string
 }) {
   const max = Math.max(previous, current, 1)
-  const MIN_HEIGHT = 12
+  const MIN_HEIGHT = 6
   const prevHeight = Math.max(MIN_HEIGHT, (previous / max) * 100)
   const currHeight = Math.max(MIN_HEIGHT, (current / max) * 100)
 
@@ -31,55 +34,47 @@ export default function CompareBars({
   const improved = current >= previous
 
   return (
-    <div className="rounded-2xl bg-white/5 p-4">
+    <div>
       {change != null && (
-        <p className="text-xl font-bold" style={{ color: improved ? accent : '#fbbf24' }}>
-          {improved ? 'Subió' : 'Bajó'} {change > 0 ? '+' : ''}
+        <p className="flex items-center gap-1.5 text-[22px] font-bold text-label">
+          <Icon
+            name="arrow-up"
+            size={22}
+            strokeWidth={2.6}
+            className={improved ? '' : 'rotate-180 text-warn-400'}
+            label={improved ? 'Subió' : 'Bajó'}
+          />
+          {change > 0 ? '+' : ''}
           {change}%
+          <span className="text-[15px] font-medium text-label-2">respecto al anterior</span>
         </p>
       )}
 
       <div className="mt-4 flex gap-4">
-        <div className="flex-1">
-          {/* La altura de la barra es un porcentaje, así que su contenedor
-              necesita altura definida para que resuelva. */}
-          <div className="flex h-[130px] items-end">
-            <div
-              className="w-full rounded-t-lg bg-white/15"
-              style={{ height: `${prevHeight}%` }}
-              role="img"
-              aria-label={`${previousLabel}: ${previous} ${unit}`}
-            />
+        {[
+          { label: previousLabel, value: previous, height: prevHeight, fill: '#3a3a3c' },
+          { label: currentLabel, value: current, height: currHeight, fill: color },
+        ].map((b) => (
+          <div key={b.label} className="flex-1">
+            {/* La altura de la barra es un porcentaje, así que su contenedor
+                necesita altura definida para que resuelva. */}
+            <div className="flex h-[130px] items-end">
+              <div
+                className="w-full rounded-t-[4px]"
+                style={{ height: `${b.height}%`, background: b.fill }}
+                role="img"
+                aria-label={`${b.label}: ${b.value} ${unit}`}
+              />
+            </div>
+            <div className="mt-2">
+              <p className="text-[13px] text-label-2">{b.label}</p>
+              <p className="text-[20px] font-bold tabular-nums text-label">
+                {b.value}
+                <span className="ml-0.5 text-[15px] font-medium text-label-2">{unit}</span>
+              </p>
+            </div>
           </div>
-          <div className="mt-2 text-center">
-            <p className="text-sm text-gray-500">{previousLabel}</p>
-            <p className="text-lg font-bold text-gray-300">
-              {previous}
-              <span className="ml-0.5 text-sm font-normal text-gray-500">{unit}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <div className="flex h-[130px] items-end">
-            <div
-              className="w-full rounded-t-lg"
-              style={{
-                height: `${currHeight}%`,
-                background: `linear-gradient(to bottom, ${accent}, ${accent}bb)`,
-              }}
-              role="img"
-              aria-label={`${currentLabel}: ${current} ${unit}`}
-            />
-          </div>
-          <div className="mt-2 text-center">
-            <p className="text-sm text-gray-500">{currentLabel}</p>
-            <p className="text-lg font-bold text-white">
-              {current}
-              <span className="ml-0.5 text-sm font-normal text-gray-500">{unit}</span>
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   )

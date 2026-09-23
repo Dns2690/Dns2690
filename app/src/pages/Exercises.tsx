@@ -1,89 +1,90 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
-import ExerciseCard from '../components/ExerciseCard'
-import { ALL_BODY_PARTS, ALL_EQUIPMENT, bodyPartLabel, equipmentLabel, filterExercises } from '../lib/exercises'
+import { Placeholder, Row, SearchField, Section, SelectPill } from '../components/ui'
+import {
+  ALL_BODY_PARTS,
+  ALL_EQUIPMENT,
+  bodyPartLabel,
+  equipmentLabel,
+  filterExercises,
+  imageUrl,
+} from '../lib/exercises'
 
 const PAGE_SIZE = 60
+
+const BODY_OPTIONS = [
+  { value: '', label: 'Todas las zonas' },
+  ...ALL_BODY_PARTS.map((bp) => ({ value: bp, label: bodyPartLabel(bp) })),
+]
+const EQUIPMENT_OPTIONS = [
+  { value: '', label: 'Todo el equipo' },
+  ...ALL_EQUIPMENT.map((eq) => ({ value: eq, label: equipmentLabel(eq) })),
+]
 
 export default function Exercises() {
   const [query, setQuery] = useState('')
   const [bodyPart, setBodyPart] = useState('')
   const [equipment, setEquipment] = useState('')
-  const [visible, setVisible] = useState(PAGE_SIZE)
 
-  const results = useMemo(() => {
-    setVisible(PAGE_SIZE)
-    return filterExercises({ query, bodyPart, equipment })
-  }, [query, bodyPart, equipment])
+  const results = useMemo(
+    () => filterExercises({ query, bodyPart, equipment }),
+    [query, bodyPart, equipment],
+  )
+
+  // La paginación se ata al filtro con que se pidió: al cambiarlo vuelve sola
+  // al primer tramo, sin escribir estado durante el render.
+  const filterKey = `${query}\u0000${bodyPart}\u0000${equipment}`
+  const [page, setPage] = useState({ filterKey, visible: PAGE_SIZE })
+  const visible = page.filterKey === filterKey ? page.visible : PAGE_SIZE
 
   return (
-    <div className="flex flex-1 flex-col">
-      <TopBar
-        title="Biblioteca"
-        back
-        right={
-          <Link
-            to="/ajustes"
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-lg text-gray-300 active:bg-white/10"
-            aria-label="Ajustes"
-          >
-            ⚙️
-          </Link>
-        }
-      />
-      <div className="flex flex-col gap-2 px-4 py-3">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar ejercicio o músculo..."
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-400"
-        />
-        <div className="flex gap-2">
-          <select
-            value={bodyPart}
-            onChange={(e) => setBodyPart(e.target.value)}
-            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-gray-100"
-          >
-            <option value="">Zona: todas</option>
-            {ALL_BODY_PARTS.map((bp) => (
-              <option key={bp} value={bp}>
-                {bodyPartLabel(bp)}
-              </option>
-            ))}
-          </select>
-          <select
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Biblioteca" back="Ejercicios" large />
+
+      <div className="flex flex-col gap-3 px-4 pb-4">
+        <SearchField value={query} onChange={setQuery} placeholder="Ejercicio o músculo" />
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4">
+          <SelectPill label="Zona" value={bodyPart} onChange={setBodyPart} options={BODY_OPTIONS} active={!!bodyPart} />
+          <SelectPill
+            label="Equipo"
             value={equipment}
-            onChange={(e) => setEquipment(e.target.value)}
-            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-gray-100"
-          >
-            <option value="">Equipo: todo</option>
-            {ALL_EQUIPMENT.map((eq) => (
-              <option key={eq} value={eq}>
-                {equipmentLabel(eq)}
-              </option>
-            ))}
-          </select>
+            onChange={setEquipment}
+            options={EQUIPMENT_OPTIONS}
+            active={!!equipment}
+          />
         </div>
-        <p className="text-xs text-gray-500">{results.length} ejercicios</p>
       </div>
 
-      <div className="flex flex-col gap-2 px-4 pb-4">
-        {results.slice(0, visible).map((e) => (
-          <ExerciseCard key={e.id} exercise={e} />
-        ))}
-        {results.length === 0 && (
-          <p className="py-10 text-center text-sm text-gray-500">No se encontraron ejercicios.</p>
-        )}
-        {visible < results.length && (
-          <button
-            onClick={() => setVisible((v) => v + PAGE_SIZE)}
-            className="mt-2 rounded-lg border border-white/10 py-2 text-sm text-gray-300 active:bg-white/10"
-          >
-            Cargar más
-          </button>
-        )}
-      </div>
+      {results.length === 0 ? (
+        <Placeholder>No hay ejercicios con esos filtros.</Placeholder>
+      ) : (
+        <Section header={`${results.length} ejercicios`}>
+          {results.slice(0, visible).map((e) => (
+            <Row
+              key={e.id}
+              to={`/ejercicio/${e.id}`}
+              leading={
+                <img
+                  src={imageUrl(e)}
+                  alt=""
+                  loading="lazy"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 shrink-0 rounded-lg bg-white object-cover"
+                />
+              }
+              title={<span className="capitalize">{e.name}</span>}
+              subtitle={`${bodyPartLabel(e.body_part)} · ${equipmentLabel(e.equipment)}`}
+            />
+          ))}
+          {visible < results.length && (
+            <Row
+              onClick={() => setPage({ filterKey, visible: visible + PAGE_SIZE })}
+              title={<span className="text-fit-400">Mostrar más</span>}
+            />
+          )}
+        </Section>
+      )}
     </div>
   )
 }

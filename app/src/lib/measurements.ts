@@ -1,20 +1,21 @@
+import type { IconName } from '../components/Icon'
 import type { MeasurementComputed, MeasurementEntry, Profile } from './types'
 
 export interface MetricConfig {
   key: 'weightKg' | 'chestCm' | 'waistCm' | 'hipsCm' | 'armCm' | 'legCm' | 'neckCm'
   label: string
   unit: string
-  icon: string
+  icon: IconName
 }
 
 export const METRICS: MetricConfig[] = [
-  { key: 'weightKg', label: 'Peso', unit: 'kg', icon: '⚖️' },
-  { key: 'hipsCm', label: 'Glúteos', unit: 'cm', icon: '🍑' },
-  { key: 'waistCm', label: 'Cintura', unit: 'cm', icon: '📏' },
-  { key: 'chestCm', label: 'Pecho', unit: 'cm', icon: '📏' },
-  { key: 'legCm', label: 'Pierna', unit: 'cm', icon: '📏' },
-  { key: 'armCm', label: 'Brazo', unit: 'cm', icon: '📏' },
-  { key: 'neckCm', label: 'Cuello', unit: 'cm', icon: '📏' },
+  { key: 'weightKg', label: 'Peso', unit: 'kg', icon: 'scale' },
+  { key: 'hipsCm', label: 'Glúteos', unit: 'cm', icon: 'tape' },
+  { key: 'waistCm', label: 'Cintura', unit: 'cm', icon: 'tape' },
+  { key: 'chestCm', label: 'Pecho', unit: 'cm', icon: 'tape' },
+  { key: 'legCm', label: 'Pierna', unit: 'cm', icon: 'tape' },
+  { key: 'armCm', label: 'Brazo', unit: 'cm', icon: 'tape' },
+  { key: 'neckCm', label: 'Cuello', unit: 'cm', icon: 'tape' },
 ]
 
 export function metricSeries(entries: MeasurementEntry[], key: MetricConfig['key']): { date: string; value: number }[] {
@@ -28,14 +29,14 @@ export interface DerivedMetricConfig {
   key: keyof MeasurementComputed
   label: string
   unit: string
-  icon: string
+  icon: IconName
   precision: number
 }
 
 export const DERIVED_METRICS: DerivedMetricConfig[] = [
-  { key: 'bodyFatPercent', label: '% Grasa corporal', unit: '%', icon: '🔥', precision: 1 },
-  { key: 'bmi', label: 'IMC', unit: '', icon: '📊', precision: 1 },
-  { key: 'waistHipRatio', label: 'Cintura/Cadera', unit: '', icon: '📐', precision: 2 },
+  { key: 'bodyFatPercent', label: '% Grasa corporal', unit: '%', icon: 'flame', precision: 1 },
+  { key: 'bmi', label: 'IMC', unit: '', icon: 'bars', precision: 1 },
+  { key: 'waistHipRatio', label: 'Cintura/Cadera', unit: '', icon: 'ratio', precision: 2 },
 ]
 
 export function derivedSeries(

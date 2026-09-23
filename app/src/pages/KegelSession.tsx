@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Placeholder, Row, Section } from '../components/ui'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
 import SessionStrip, { type StripItem } from '../components/SessionStrip'
 import {
@@ -88,10 +90,12 @@ export default function KegelSession() {
         const elapsedMs = Date.now() - new Date(last.completedAt).getTime()
         const requiredMs = REST_BETWEEN_ROUTINES_HOURS * 3600_000
         if (elapsedMs < requiredMs) {
-          const left = requiredMs - elapsedMs
-          const h = Math.floor(left / 3600_000)
-          const m = Math.ceil((left % 3600_000) / 60_000)
-          setRestWarning(h > 0 ? `${h}h ${m}m` : `${m}m`)
+          // Se redondea una sola vez, sobre los minutos totales: redondear el
+          // resto de la hora por separado daba "1h 60m" con 1 h 59,7 min.
+          const totalMinutes = Math.ceil((requiredMs - elapsedMs) / 60_000)
+          const h = Math.floor(totalMinutes / 60)
+          const m = totalMinutes % 60
+          setRestWarning(h > 0 ? (m > 0 ? `${h} h ${m} min` : `${h} h`) : `${m} min`)
         }
       }
 
@@ -331,9 +335,9 @@ export default function KegelSession() {
 
   if (stage === 'loading') {
     return (
-      <div className="pt-safe flex flex-1 flex-col">
-        <TopBar title={isDemo ? 'Demo' : 'Rutina Kegel'} back />
-        <p className="p-6 text-center text-sm text-gray-500">Preparando…</p>
+      <div className="flex flex-1 flex-col">
+        <TopBar title={isDemo ? 'Demo' : 'Rutina'} back />
+        <Placeholder>Preparando…</Placeholder>
       </div>
     )
   }
@@ -341,71 +345,73 @@ export default function KegelSession() {
   if (stage === 'preview') {
     const totalSeconds = Math.round(timelineDurationMs(timeline) / 1000)
     return (
-      <div className="flex flex-1 flex-col pb-6">
-        <TopBar title={isDemo ? 'Demo' : 'Rutina Kegel'} back />
-        <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-1 flex-col pb-8">
+        <TopBar title={isDemo ? 'Demo' : 'Rutina'} back />
+        <div className="flex flex-col gap-7 pt-4">
           {isDemo ? (
-            <div className="rounded-2xl bg-rose-500/10 p-4">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{demoExercise?.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg font-bold text-gray-100">{demoExercise?.name}</p>
-                  <p className="text-sm text-rose-300">
-                    Demo · {formatDuration(totalSeconds)} · nivel {level.label}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 text-base leading-relaxed text-gray-300">{demoExercise?.description}</p>
-              <p className="mt-2 text-sm text-gray-500">No cuenta para tu meta diaria ni para la racha.</p>
+            <div className="flex flex-col items-center px-8 text-center">
+              {demoExercise && <IconTile name={demoExercise.icon} tone="kegel" size="xl" />}
+              <p className="mt-4 text-[28px] font-bold leading-tight tracking-tight text-label">{demoExercise?.name}</p>
+              <p className="mt-1 text-[15px] font-semibold text-kegel-400">
+                Demo · {formatDuration(totalSeconds)} · {level.label}
+              </p>
+              <p className="mt-4 text-[17px] leading-relaxed text-label">{demoExercise?.description}</p>
+              <p className="mt-3 text-[13px] text-label-2">No cuenta para tu meta diaria ni para la racha.</p>
             </div>
           ) : (
-          <div className="rounded-2xl bg-white/5 p-4 text-center">
-            <p className="text-sm text-gray-500">{level.label}</p>
-            <p className="mt-1 text-3xl font-bold text-gray-100">{formatDuration(totalSeconds)}</p>
-            <p className="mt-1 text-sm text-gray-500">{exerciseIds.length} ejercicios al azar</p>
-          </div>
+            <div className="flex flex-col items-center px-8 text-center">
+              <p className="text-[15px] font-semibold text-kegel-400">{level.label}</p>
+              <p className="mt-1 text-[56px] font-bold leading-none tracking-tight tabular-nums text-label">
+                {formatDuration(totalSeconds)}
+              </p>
+              <p className="mt-2 text-[15px] text-label-2">{exerciseIds.length} ejercicios al azar</p>
+            </div>
           )}
 
           {restWarning && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-              <p className="text-sm font-medium text-amber-300">🛋️ Descansá desde la rutina anterior</p>
-              <p className="mt-1 text-sm text-gray-400">
-                Se recomienda esperar al menos {REST_BETWEEN_ROUTINES_HOURS} horas entre entrenamientos para
-                maximizar la eficacia y evitar sobrecargar el piso pélvico. Faltan{' '}
-                <span className="font-medium text-amber-300">{restWarning}</span>.
-              </p>
-              <button
-                onClick={() => navigate('/kegel')}
-                className="mt-3 w-full rounded-lg bg-amber-500 py-2.5 text-sm font-medium text-[#0b0d12] active:bg-amber-400"
-              >
-                Tomar descanso
-              </button>
-            </div>
+            <Section>
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <IconTile name="moon" tone="warn" />
+                  <p className="text-[17px] font-semibold text-label">Descansá desde la rutina anterior</p>
+                </div>
+                <p className="mt-2 text-[15px] leading-snug text-label-2">
+                  Conviene esperar al menos {REST_BETWEEN_ROUTINES_HOURS} horas entre entrenamientos para no
+                  sobrecargar el piso pélvico. Faltan <span className="font-semibold text-warn-300">{restWarning}</span>.
+                </p>
+                <div className="mt-3">
+                  <Button tone="warn" size="md" onClick={() => navigate('/kegel')}>
+                    Tomar descanso
+                  </Button>
+                </div>
+              </div>
+            </Section>
           )}
 
-          <div className={`flex-col gap-2 ${isDemo ? 'hidden' : 'flex'}`}>
-            {exerciseIds.map((id, i) => {
-              const ex = getExercise(id)
-              if (!ex) return null
-              return (
-                <div key={`${id}-${i}`} className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
-                  <span className="text-xl">{ex.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-100">{ex.name}</p>
-                    <p className="truncate text-sm text-gray-500">{ex.description}</p>
-                  </div>
-                  <span className="shrink-0 text-sm text-gray-500">×{repsFor(ex, level)}</span>
-                </div>
-              )
-            })}
-          </div>
+          {!isDemo && (
+            <Section header="Esta rutina">
+              {exerciseIds.map((id, i) => {
+                const ex = getExercise(id)
+                if (!ex) return null
+                return (
+                  <Row
+                    key={`${id}-${i}`}
+                    icon={ex.icon}
+                    tone="kegel"
+                    title={ex.name}
+                    subtitle={ex.description}
+                    detail={<span className="text-[15px] tabular-nums">×{repsFor(ex, level)}</span>}
+                  />
+                )
+              })}
+            </Section>
+          )}
 
-          <button
-            onClick={beginCountdown}
-            className="rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
-          >
-            {isDemo ? 'Probar' : restWarning ? 'Entrenar igual' : 'Empezar'}
-          </button>
+          <div className="px-4">
+            <Button tone="kegel" icon="play" onClick={beginCountdown}>
+              {isDemo ? 'Probar' : restWarning ? 'Entrenar igual' : 'Empezar'}
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -413,30 +419,31 @@ export default function KegelSession() {
 
   if (stage === 'countdown') {
     return (
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-4">
-        <p className="text-sm text-gray-400">Preparate…</p>
-        <p className="text-7xl font-bold text-rose-400">{prepCount}</p>
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-2">
+        <p className="text-[17px] text-label-2">Preparate…</p>
+        <p className="text-[120px] font-bold leading-none tabular-nums text-kegel-400">{prepCount}</p>
       </div>
     )
   }
 
   if (stage === 'done') {
     return (
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-5xl">{isDemo ? '🔍' : '✅'}</p>
-        <p className="text-xl font-semibold text-gray-100">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center px-8 text-center">
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-kegel-500 text-black">
+          <Icon name={isDemo ? 'search' : 'check'} size={40} strokeWidth={2.6} />
+        </span>
+        <p className="mt-5 text-[28px] font-bold leading-tight tracking-tight text-label">
           {isDemo ? `Demo de ${demoExercise?.name ?? ''}` : 'Rutina completada'}
         </p>
-        <p className="text-sm text-gray-500">
-          {exerciseIds.length} ejercicios · {formatDuration(Math.round(timelineDurationMs(timeline) / 1000))} ·{' '}
-          {level.label}
+        <p className="mt-2 text-[15px] text-label-2">
+          {exerciseIds.length} {exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'} ·{' '}
+          {formatDuration(Math.round(timelineDurationMs(timeline) / 1000))} · {level.label}
         </p>
-        <button
-          onClick={() => navigate('/kegel')}
-          className="mt-4 w-full rounded-lg bg-rose-500 py-3 text-sm font-semibold text-[#0b0d12] active:bg-rose-400"
-        >
-          Listo
-        </button>
+        <div className="mt-8 w-full max-w-xs">
+          <Button tone="kegel" onClick={() => navigate('/kegel')}>
+            Listo
+          </Button>
+        </div>
       </div>
     )
   }
@@ -451,94 +458,90 @@ export default function KegelSession() {
         </div>
       )}
 
-      <div className="px-4 pt-2 text-center">
-        <p className="text-lg text-gray-300">Seguí el ritmo y las señales</p>
-      </div>
-
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef} mode={current ? exerciseMode(current.exerciseId) : 'contract'}>
-          <p className="text-7xl font-bold tabular-nums leading-none text-white">{stepRemaining}</p>
-          <p className="mt-2 text-xl font-semibold text-white">{current ? phaseLabel(current) : ''}</p>
+          <p className="text-[76px] font-bold leading-none tracking-tight tabular-nums text-label">{stepRemaining}</p>
+          <p className="mt-2 text-[20px] font-semibold text-label">{current ? phaseLabel(current) : ''}</p>
         </KegelGuide>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 px-6 text-center">
           {isRest ? (
-            <p className="text-xl font-bold text-gray-100">Descanso</p>
+            <p className="text-[22px] font-bold text-label">Descanso</p>
           ) : (
             <button
               onClick={openInfo}
-              className="inline-flex items-center gap-2 rounded-lg px-3 py-1 active:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-xl px-3 py-1 active:bg-press"
+              aria-label={`Cómo se hace ${currentExercise?.name ?? ''}`}
             >
-              <span className="text-xl font-bold text-gray-100">{currentExercise?.name ?? ''}</span>
-              <span
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-rose-400"
-                aria-hidden="true"
-              >
-                i
-              </span>
+              <span className="text-[22px] font-bold text-label">{currentExercise?.name ?? ''}</span>
+              <Icon name="info" size={22} className="text-kegel-400" />
             </button>
           )}
-          <p className="mt-1 text-base text-gray-400">
+          <p className="mt-1 text-[15px] text-label-2">
             {isRest
               ? 'Preparate para el próximo ejercicio'
               : current
-                ? `Repetición ${current.repIndex + 1} de ${current.totalReps} · ejercicio ${current.exerciseIndex + 1}/${exerciseIds.length}`
+                ? `Repetición ${current.repIndex + 1} de ${current.totalReps} · ejercicio ${current.exerciseIndex + 1} de ${exerciseIds.length}`
                 : ''}
           </p>
-          <p className="mt-2 text-base text-gray-500">Queda {formatDuration(totalRemaining)}</p>
+          <p className="mt-1 text-[15px] tabular-nums text-label-2">Quedan {formatDuration(totalRemaining)}</p>
         </div>
       </div>
 
       {showInfo && currentExercise && (
-        <div className="fixed inset-0 z-30 flex items-end bg-black/70" onClick={closeInfo}>
+        <div className="fixed inset-0 z-30 flex items-end bg-black/60" onClick={closeInfo}>
           <div
-            className="max-h-[80vh] w-full overflow-y-auto rounded-t-3xl bg-[#151922] p-5 pb-8"
+            className="max-h-[80vh] w-full overflow-y-auto rounded-t-[14px] bg-cell px-5 pt-2 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-3 flex items-center gap-3">
-              <span className="text-3xl">{currentExercise.icon}</span>
+            {/* Asa de la hoja, como en las hojas de iOS. */}
+            <div className="mx-auto mb-4 h-[5px] w-9 rounded-full bg-label-3" />
+            <div className="mb-4 flex items-center gap-3">
+              <IconTile name={currentExercise.icon} tone="kegel" size="lg" />
               <div>
-                <p className="text-2xl font-bold text-gray-100">{currentExercise.name}</p>
-                <p className="text-sm text-amber-400">Rutina en pausa</p>
+                <p className="text-[22px] font-bold leading-tight text-label">{currentExercise.name}</p>
+                <p className="mt-0.5 flex items-center gap-1 text-[13px] font-semibold text-warn-400">
+                  <Icon name="pause" size={12} />
+                  Rutina en pausa
+                </p>
               </div>
             </div>
 
-            <p className="text-lg leading-relaxed text-gray-300">{currentExercise.description}</p>
+            <p className="text-[17px] leading-relaxed text-label">{currentExercise.description}</p>
 
             {exerciseMode(currentExercise.id) === 'lengthen' && (
-              <p className="mt-3 rounded-xl bg-violet-500/10 p-3 text-base leading-relaxed text-violet-300">
+              <p className="mt-4 rounded-xl bg-[#da8fff]/15 p-3 text-[15px] leading-relaxed text-[#ecc4ff]">
                 Este ejercicio es al revés que los demás: acá se afloja y se alarga, no se aprieta. Por eso la luz es
-                violeta.
+                lavanda y no azul.
               </p>
             )}
 
-            <button
-              onClick={closeInfo}
-              className="mt-5 w-full rounded-xl bg-rose-500 py-4 text-lg font-semibold text-[#0b0d12] active:bg-rose-400"
-            >
-              Seguir
-            </button>
+            <div className="mt-6">
+              <Button tone="kegel" onClick={closeInfo}>
+                Seguir
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      {paused && (
-        <p className="pb-2 text-center text-base font-medium text-amber-400">En pausa</p>
-      )}
-
-      <div className="flex gap-2 p-4">
-        <button
-          onClick={togglePause}
-          className="flex-1 rounded-xl bg-white/10 py-4 text-lg font-semibold text-gray-100 active:bg-white/20"
-        >
-          {paused ? 'Reanudar' : 'Pausar'}
-        </button>
-        <button
-          onClick={abandon}
-          className="flex-1 rounded-xl bg-red-500/90 py-4 text-lg font-semibold text-white active:bg-red-500"
-        >
-          Terminar
-        </button>
+      <div className="flex flex-col gap-2 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-2">
+        {paused && <p className="text-center text-[15px] font-semibold text-warn-400">En pausa</p>}
+        <div className="flex gap-3">
+          <button
+            onClick={togglePause}
+            className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[14px] bg-cell-2 text-[17px] font-semibold text-label active:bg-press"
+          >
+            <Icon name={paused ? 'play' : 'pause'} size={18} />
+            {paused ? 'Reanudar' : 'Pausar'}
+          </button>
+          <button
+            onClick={abandon}
+            className="flex h-[50px] flex-1 items-center justify-center rounded-[14px] bg-danger-500/20 text-[17px] font-semibold text-danger-400 active:bg-danger-500/30"
+          >
+            Terminar
+          </button>
+        </div>
       </div>
     </div>
   )

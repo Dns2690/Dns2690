@@ -1,64 +1,68 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import TopBar from '../components/TopBar'
-import { deleteRoutine, listRoutines } from '../lib/store'
+import { Link } from 'react-router-dom'
+import TopBar, { BarButton } from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Placeholder, Section } from '../components/ui'
+import { listRoutines } from '../lib/store'
 import type { Routine } from '../lib/types'
 
+/**
+ * Lista de rutinas propias. Borrar vive dentro del editor, como en
+ * Recordatorios: acá cada fila solo abre la rutina o la entrena.
+ */
 export default function Routines() {
   const [routines, setRoutines] = useState<Routine[] | null>(null)
-  const navigate = useNavigate()
 
   useEffect(() => {
     listRoutines().then(setRoutines)
   }, [])
 
-  async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar esta rutina?')) return
-    await deleteRoutine(id)
-    setRoutines((await listRoutines()) ?? [])
-  }
-
   return (
-    <div className="flex flex-1 flex-col">
-      <TopBar title="Rutinas" />
-      <div className="flex flex-col gap-2 p-4">
-        <button
-          onClick={() => navigate('/rutinas/nueva')}
-          className="rounded-lg bg-cyan-500 py-2.5 text-sm font-medium text-[#0b0d12] active:bg-cyan-400"
-        >
-          + Nueva rutina
-        </button>
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Rutinas" large right={<BarButton icon="plus" label="Nueva rutina" to="/rutinas/nueva" />} />
 
-        {routines === null && <p className="py-10 text-center text-sm text-gray-500">Cargando…</p>}
+      {routines === null && <Placeholder>Cargando…</Placeholder>}
 
-        {routines?.length === 0 && (
-          <p className="py-10 text-center text-sm text-gray-500">
-            Todavía no tenés rutinas. Creá una para empezar.
+      {routines?.length === 0 && (
+        <div className="flex flex-col items-center px-8 pt-16 text-center">
+          <IconTile name="list" size="xl" />
+          <p className="mt-5 text-[22px] font-bold text-label">Sin rutinas todavía</p>
+          <p className="mt-2 text-[15px] leading-snug text-label-2">
+            Armá una con los ejercicios de la biblioteca y entrenala cuando quieras.
           </p>
-        )}
-
-        {routines?.map((r) => (
-          <div key={r.id} className="flex items-center gap-2 rounded-xl bg-white/5 p-3">
-            <Link to={`/rutinas/${r.id}`} className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-100">{r.name}</p>
-              <p className="text-xs text-gray-500">{r.exercises.length} ejercicios</p>
-            </Link>
-            <button
-              onClick={() => navigate(`/entrenar?rutina=${r.id}`)}
-              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-gray-200 active:bg-white/20"
-            >
-              Entrenar
-            </button>
-            <button
-              onClick={() => handleDelete(r.id)}
-              className="rounded-lg px-2 py-1.5 text-xs text-red-400 active:bg-white/10"
-              aria-label="Eliminar rutina"
-            >
-              🗑
-            </button>
+          <div className="mt-6 w-full max-w-xs">
+            <Button to="/rutinas/nueva" icon="plus">
+              Nueva rutina
+            </Button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {routines && routines.length > 0 && (
+        <Section>
+          {routines.map((r) => (
+            <div key={r.id} className="flex items-center gap-3 pr-4" style={{ ['--sep-inset' as string]: '58px' }}>
+              <Link to={`/rutinas/${r.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-4 active:opacity-60">
+                <IconTile name="list" />
+                <div className="min-w-0">
+                  <p className="truncate text-[17px] text-label">{r.name}</p>
+                  <p className="text-[15px] text-label-2">
+                    {r.exercises.length} {r.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}
+                  </p>
+                </div>
+              </Link>
+              <Link
+                to={`/entrenar?rutina=${r.id}`}
+                className="flex h-[30px] shrink-0 items-center gap-1 rounded-full bg-fit-500/15 pl-2.5 pr-3.5 text-[15px] font-semibold text-fit-400 active:bg-fit-500/25"
+                aria-label={`Entrenar ${r.name}`}
+              >
+                <Icon name="play" size={14} />
+                Entrenar
+              </Link>
+            </div>
+          ))}
+        </Section>
+      )}
     </div>
   )
 }

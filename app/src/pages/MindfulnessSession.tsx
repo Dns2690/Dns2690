@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import KegelGuide, { type KegelGuideHandle } from '../components/KegelGuide'
+import TopBar from '../components/TopBar'
+import Icon, { IconTile } from '../components/Icon'
+import { Button, Placeholder, Row, Section } from '../components/ui'
 import {
   breathAt,
   buildSession,
@@ -241,7 +244,7 @@ export default function MindfulnessSession() {
   }
 
   if (stage === 'loading' || !session) {
-    return <p className="p-6 text-center text-base text-gray-500">Preparando…</p>
+    return <Placeholder>Preparando…</Placeholder>
   }
 
   const level = getLevel(session.levelId)
@@ -249,99 +252,101 @@ export default function MindfulnessSession() {
 
   if (stage === 'preview') {
     return (
-      <div className="pt-safe flex flex-1 flex-col justify-between p-4 pb-8">
-        <div>
-          <button onClick={() => navigate('/mindfulness')} className="py-2 text-lg text-gray-400">
-            ←
-          </button>
-          <div className="mt-4 rounded-2xl bg-violet-500/10 p-6 text-center">
-            <p className="text-base text-violet-300">{level.label}</p>
-            <p className="mt-1 text-4xl font-bold text-gray-100">{level.minutes} min</p>
-            <p className="mt-1 text-base text-gray-400">{level.summary}</p>
+      <div className="flex flex-1 flex-col pb-8">
+        <TopBar title="Sesión" back />
+        <div className="flex flex-col gap-7 pt-4">
+          <div className="flex flex-col items-center px-8 text-center">
+            <IconTile name="lotus" tone="mind" size="xl" />
+            <p className="mt-4 text-[15px] font-semibold text-mind-400">{level.label}</p>
+            <p className="mt-1 text-[56px] font-bold leading-none tracking-tight tabular-nums text-label">
+              {level.minutes}
+              <span className="ml-1 text-[22px] font-semibold text-label-2">min</span>
+            </p>
+            <p className="mt-2 text-[15px] text-label-2">{level.summary}</p>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2">
+          <Section
+            header="Recorrido"
+            footer="Buscá un lugar donde no te interrumpan. La pantalla se mantiene encendida durante la sesión: en iPhone, si la bloqueás, el sonido se corta."
+          >
             {session.segments.map((seg, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
-                <span className="w-12 shrink-0 text-base font-semibold text-violet-400">
-                  {Math.round(seg.seconds / 60) || '<1'}′
-                </span>
-                <p className="text-base text-gray-300">{seg.title}</p>
-              </div>
+              <Row
+                key={i}
+                leading={
+                  <span className="w-9 shrink-0 text-[17px] font-semibold tabular-nums text-mind-400">
+                    {Math.round(seg.seconds / 60) || '<1'}′
+                  </span>
+                }
+                sepInset={64}
+                title={seg.title}
+              />
             ))}
+          </Section>
+
+          <div className="px-4">
+            <Button tone="mind" icon="play" onClick={begin}>
+              Empezar
+            </Button>
           </div>
-
-          <p className="mt-4 px-1 text-base leading-relaxed text-gray-500">
-            Buscá un lugar donde no te interrumpan. La pantalla se mantiene encendida durante la sesión: en iPhone,
-            si la bloqueás, el sonido se corta.
-          </p>
         </div>
-
-        <button
-          onClick={begin}
-          className="mt-6 rounded-2xl bg-violet-500 py-4 text-lg font-semibold text-white active:bg-violet-400"
-        >
-          Empezar
-        </button>
       </div>
     )
   }
 
   if (stage === 'done') {
     return (
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-5xl">🧘</p>
-        <p className="text-2xl font-bold text-gray-100">
+      <div className="pt-safe flex flex-1 flex-col items-center justify-center px-8 text-center">
+        <IconTile name="lotus" tone="mind" size="xl" />
+        <p className="mt-5 text-[34px] font-bold leading-tight tracking-tight text-label">
           {elapsedMinutes} {elapsedMinutes === 1 ? 'minuto' : 'minutos'}
         </p>
-        <p className="text-base text-gray-500">Quedó registrado. Lo que cuenta es volver mañana.</p>
-        <button
-          onClick={() => navigate('/mindfulness')}
-          className="mt-6 w-full rounded-2xl bg-violet-500 py-4 text-lg font-semibold text-white active:bg-violet-400"
-        >
-          Listo
-        </button>
+        <p className="mt-2 text-[17px] text-label-2">Quedó registrado. Lo que cuenta es volver mañana.</p>
+        <div className="mt-8 w-full max-w-xs">
+          <Button tone="mind" onClick={() => navigate('/mindfulness')}>
+            Listo
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="pt-safe flex flex-1 flex-col">
-      <div className="px-6 pt-6 text-center">
-        <p className="text-lg font-semibold text-violet-300">{segment.title}</p>
-      </div>
+      <p className="px-6 pt-4 text-center text-[17px] font-semibold text-mind-400">{segment.title}</p>
 
-      <div className="pt-safe flex flex-1 flex-col items-center justify-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <KegelGuide ref={guideRef} mode="breath">
           {breathLabel ? (
-            <p className="text-3xl font-semibold text-white">{breathLabel}</p>
+            <p className="text-[34px] font-semibold text-label">{breathLabel}</p>
           ) : (
-            <p className="text-4xl font-bold tabular-nums text-white">{formatMinutes(remaining)}</p>
+            <p className="text-[44px] font-bold tabular-nums text-label">{formatMinutes(remaining)}</p>
           )}
         </KegelGuide>
 
-        <div className="mt-6 min-h-[112px] px-6 text-center">
-          <p className="text-lg leading-relaxed text-gray-300">{cueText ?? segment.guidance}</p>
+        <div className="mt-3 min-h-[96px] px-7 text-center">
+          <p className="text-[18px] leading-relaxed text-label">{cueText ?? segment.guidance}</p>
         </div>
       </div>
 
-      <div className="px-6 pb-2 text-center text-base text-gray-600">
-        {paused ? 'En pausa' : `Queda ${formatMinutes(remaining)}`}
-      </div>
-
-      <div className="flex gap-2 p-4">
-        <button
-          onClick={togglePause}
-          className="flex-1 rounded-xl bg-white/10 py-4 text-lg font-medium text-gray-100 active:bg-white/20"
-        >
-          {paused ? 'Reanudar' : 'Pausar'}
-        </button>
-        <button
-          onClick={() => finish(false)}
-          className="flex-1 rounded-xl bg-white/10 py-4 text-lg font-medium text-gray-300 active:bg-white/20"
-        >
-          Terminar
-        </button>
+      <div className="flex flex-col gap-2 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-2">
+        <p className={`text-center text-[15px] tabular-nums ${paused ? 'font-semibold text-warn-400' : 'text-label-2'}`}>
+          {paused ? 'En pausa' : `Quedan ${formatMinutes(remaining)}`}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={togglePause}
+            className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[14px] bg-cell-2 text-[17px] font-semibold text-label active:bg-press"
+          >
+            <Icon name={paused ? 'play' : 'pause'} size={18} />
+            {paused ? 'Reanudar' : 'Pausar'}
+          </button>
+          <button
+            onClick={() => finish(false)}
+            className="flex h-[50px] flex-1 items-center justify-center rounded-[14px] bg-cell-2 text-[17px] font-semibold text-label active:bg-press"
+          >
+            Terminar
+          </button>
+        </div>
       </div>
     </div>
   )

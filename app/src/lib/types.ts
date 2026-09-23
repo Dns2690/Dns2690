@@ -1,3 +1,5 @@
+import type { IconName } from '../components/Icon'
+
 export type BodyPart =
   | 'back' | 'cardio' | 'chest' | 'lower arms' | 'lower legs'
   | 'neck' | 'shoulders' | 'upper arms' | 'upper legs' | 'waist'
@@ -103,7 +105,7 @@ export interface ProgramInfo {
   id: string
   name: string
   tagline: string
-  icon: string
+  icon: IconName
   equipment: string
   months: ProgramMonth[]
 }
@@ -157,7 +159,7 @@ export type KegelMode = 'contract' | 'lengthen'
 export interface KegelExercise {
   id: string
   name: string
-  icon: string
+  icon: IconName
   description: string
   minLevel: KegelLevelId
   mode?: KegelMode

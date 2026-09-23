@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import TopBar from '../components/TopBar'
-import { BREATH_PATTERNS, getBreathPattern, MINDFULNESS_LEVELS } from '../lib/mindfulness'
+import TopBar, { BarButton } from '../components/TopBar'
+import Icon from '../components/Icon'
+import { Button, Placeholder, Row, Section, Stat, Toggle } from '../components/ui'
+import { BREATH_PATTERNS, getBreathPattern, getLevel, MINDFULNESS_LEVELS } from '../lib/mindfulness'
 import { AMBIENTS } from '../lib/ambient'
 import { computeStreak, toDateKey, todayKey } from '../lib/kegel'
 import { getMindfulnessSettings, listMindfulnessLogs, saveMindfulnessSettings } from '../lib/store'
@@ -18,7 +19,6 @@ const DEFAULTS: MindfulnessSettings = {
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 export default function Mindfulness() {
-  const navigate = useNavigate()
   const [settings, setSettings] = useState<MindfulnessSettings | null>(null)
   const [logs, setLogs] = useState<MindfulnessLog[] | null>(null)
 
@@ -73,131 +73,104 @@ export default function Mindfulness() {
   if (!settings || logs === null) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Mindfulness" back />
-        <p className="p-6 text-center text-base text-gray-500">Cargando…</p>
+        <TopBar title="Mindfulness" back="Bienestar" large />
+        <Placeholder>Cargando…</Placeholder>
       </div>
     )
   }
 
   const pattern = getBreathPattern(settings.breathId)
+  const level = getLevel(settings.levelId)
+  const check = <Icon name="check" size={20} strokeWidth={2.6} className="shrink-0 text-mind-400" />
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar
-        title="Mindfulness"
-        back
-        right={
-          <Link to="/ajustes" className="rounded-lg px-2 py-1 text-lg active:bg-white/10" aria-label="Ajustes">
-            ⚙️
-          </Link>
-        }
-      />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Mindfulness" back="Bienestar" large right={<BarButton icon="gear" label="Ajustes" to="/ajustes" />} />
 
-      <div className="flex flex-col gap-3 p-4">
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-base text-gray-500">Hoy</p>
-            {streak > 0 && <p className="text-base text-violet-400">🔥 {streak} {streak === 1 ? 'día' : 'días'}</p>}
-          </div>
-          <p className="mt-1 text-2xl font-bold text-gray-100">
-            {todayMinutes}
-            <span className="text-base font-normal text-gray-500"> min meditados</span>
-          </p>
-        </div>
-
-        <button
-          onClick={() => navigate('/mindfulness/sesion')}
-          className="rounded-2xl bg-violet-500 py-4 text-lg font-semibold text-white active:bg-violet-400"
-        >
-          Meditar
-        </button>
-
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-base font-semibold text-gray-100">Nivel</p>
-          <div className="mt-3 flex flex-col gap-2">
-            {MINDFULNESS_LEVELS.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => update({ levelId: l.id as MindfulnessLevelId })}
-                className={`flex items-center gap-3 rounded-xl p-3 text-left ${
-                  settings.levelId === l.id ? 'bg-violet-400/15 ring-1 ring-violet-400' : 'bg-white/5'
-                }`}
-              >
-                <span
-                  className={`w-12 shrink-0 text-lg font-bold ${
-                    settings.levelId === l.id ? 'text-violet-300' : 'text-gray-500'
-                  }`}
-                >
-                  {l.minutes}′
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-base font-medium text-gray-100">{l.label}</p>
-                  <p className="text-sm text-gray-500">{l.summary}</p>
-                </div>
-              </button>
-            ))}
+      <div className="flex flex-col gap-7">
+        <div className="px-4">
+          <div className="rounded-2xl bg-cell p-4">
+            <div className="flex gap-4">
+              <Stat label="Hoy" value={<>{todayMinutes}<span className="ml-1 text-[15px] font-medium text-label-2">min</span></>} />
+              <Stat
+                label="Racha"
+                value={
+                  <span className="flex items-center gap-1">
+                    {streak}
+                    <Icon name="flame" size={20} className={streak > 0 ? 'text-mind-400' : 'text-label-3'} />
+                  </span>
+                }
+              />
+              <Stat label="Total" value={<>{totalMinutes}<span className="ml-1 text-[15px] font-medium text-label-2">min</span></>} />
+            </div>
+            <div className="mt-4">
+              <Button tone="mind" icon="play" to="/mindfulness/sesion">
+                Meditar {level.minutes} minutos
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-base font-semibold text-gray-100">Respiración</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {BREATH_PATTERNS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => update({ breathId: p.id })}
-                className={`rounded-xl p-3 text-left ${
-                  settings.breathId === p.id ? 'bg-violet-400/15 ring-1 ring-violet-400' : 'bg-white/5'
-                }`}
-              >
-                <p className="text-base font-medium text-gray-100">{p.label}</p>
-                <p className="text-sm text-gray-500">{p.description}</p>
-              </button>
-            ))}
-          </div>
-          {pattern.evidence && (
-            <p className="mt-3 text-sm leading-relaxed text-gray-500">{pattern.evidence}</p>
-          )}
-        </div>
-
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-base font-semibold text-gray-100">Ambiente</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {AMBIENTS.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => update({ ambient: a.id })}
-                className={`rounded-xl p-3 text-left ${
-                  settings.ambient === a.id ? 'bg-violet-400/15 ring-1 ring-violet-400' : 'bg-white/5'
-                }`}
-              >
-                <p className="text-base font-medium text-gray-100">{a.label}</p>
-                <p className="text-sm text-gray-500">{a.description}</p>
-              </button>
-            ))}
-          </div>
-          <label className="mt-4 flex items-center justify-between py-1">
-            <span className="text-base text-gray-200">🔔 Campanas</span>
-            <input
-              type="checkbox"
-              checked={settings.bells}
-              onChange={(e) => update({ bells: e.target.checked })}
-              className="h-5 w-5 accent-violet-400"
+        <Section header="Nivel">
+          {MINDFULNESS_LEVELS.map((l) => (
+            <Row
+              key={l.id}
+              onClick={() => update({ levelId: l.id as MindfulnessLevelId })}
+              leading={
+                <span className="w-9 shrink-0 text-[17px] font-semibold tabular-nums text-mind-400">{l.minutes}′</span>
+              }
+              sepInset={64}
+              title={l.label}
+              subtitle={l.summary}
+              trailing={settings.levelId === l.id ? check : undefined}
             />
-          </label>
-          <p className="mt-1 text-sm leading-relaxed text-gray-500">
-            Todo el sonido se genera en el teléfono: no hay archivos ni hace falta conexión.
-          </p>
-        </div>
+          ))}
+        </Section>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-base font-semibold text-gray-100">Tu práctica</p>
-            <p className="text-base font-bold text-violet-300">{totalMinutes} min</p>
-          </div>
-          <div className="mt-3 grid grid-cols-7 gap-1.5">
+        <Section header="Respiración" footer={pattern.evidence}>
+          {BREATH_PATTERNS.map((p) => (
+            <Row
+              key={p.id}
+              onClick={() => update({ breathId: p.id })}
+              title={p.label}
+              subtitle={p.description}
+              trailing={settings.breathId === p.id ? check : undefined}
+            />
+          ))}
+        </Section>
+
+        <Section header="Ambiente" footer="Todo el sonido se genera en el teléfono: no hay archivos ni hace falta conexión.">
+          {AMBIENTS.map((a) => (
+            <Row
+              key={a.id}
+              onClick={() => update({ ambient: a.id })}
+              title={a.label}
+              subtitle={a.description}
+              trailing={settings.ambient === a.id ? check : undefined}
+            />
+          ))}
+        </Section>
+
+        <Section>
+          <Row
+            icon="bell"
+            tone="mind"
+            title="Campanas"
+            trailing={<Toggle tone="mind" label="Campanas" checked={settings.bells} onChange={(v) => update({ bells: v })} />}
+          />
+          <Row
+            to="/mindfulness/voz"
+            icon="mic"
+            tone="mind"
+            title="Voz guiada"
+            detail={settings.voiceEnabled ? 'Activada' : 'Desactivada'}
+          />
+        </Section>
+
+        <Section header="Tu práctica" footer={`${totalMinutes} minutos meditados en total.`}>
+          <div className="grid grid-cols-7 gap-y-1.5 p-3">
             {WEEKDAYS.map((d, i) => (
-              <span key={i} className="text-center text-xs text-gray-600">
+              <span key={i} className="pb-1 text-center text-[13px] font-semibold text-label-3">
                 {d}
               </span>
             ))}
@@ -206,34 +179,23 @@ export default function Mindfulness() {
               const mins = minutesByDate[key] ?? 0
               const isToday = key === today
               return (
-                <span
-                  key={key}
-                  className={`flex aspect-square items-center justify-center rounded-md text-xs ${
-                    mins > 0 ? 'bg-violet-400 font-semibold text-[#0b0d12]' : 'bg-white/5 text-gray-600'
-                  } ${isToday ? 'ring-1 ring-violet-400' : ''}`}
-                >
-                  {Number(key.slice(8))}
+                <span key={key} className="flex justify-center">
+                  <span
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-[17px] tabular-nums ${
+                      mins > 0
+                        ? 'bg-mind-500 font-semibold text-black'
+                        : isToday
+                          ? 'font-semibold text-mind-400 ring-2 ring-mind-500 ring-inset'
+                          : 'text-label-2'
+                    }`}
+                  >
+                    {Number(key.slice(8))}
+                  </span>
                 </span>
               )
             })}
           </div>
-        </div>
-
-        <Link
-          to="/mindfulness/voz"
-          className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4 active:bg-violet-500/20"
-        >
-          <p className="text-base font-medium text-violet-300">🎙️ Voz guiada</p>
-          <p className="mt-1 text-sm leading-relaxed text-gray-400">
-            Elegí la voz y su velocidad, o escuchá las que tenga tu teléfono antes de decidir.
-          </p>
-        </Link>
-
-        <p className="px-1 text-sm leading-relaxed text-gray-600">
-          Por ahora la guía es por texto y campanas, no por voz: en iPhone el navegador descarta el habla programada, así que
-          una voz narrada se cortaría a mitad de sesión. Leé la consigna, cerrá los ojos y dejá que las campanas
-          marquen los cambios.
-        </p>
+        </Section>
       </div>
     </div>
   )

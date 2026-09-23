@@ -44,12 +44,12 @@ export default function SessionStrip({
             aria-current={active ? 'step' : undefined}
             className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
               active
-                ? 'bg-rose-500 font-semibold text-[#0b0d12]'
+                ? 'bg-kegel-500 font-semibold text-black'
                 : done
-                  ? 'text-gray-700'
+                  ? 'text-label-3'
                   : item.isRest
-                    ? 'text-gray-600'
-                    : 'text-gray-400'
+                    ? 'text-label-3'
+                    : 'text-label-2'
             }`}
           >
             {item.label}

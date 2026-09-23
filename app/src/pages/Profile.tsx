@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import { Avatar, Placeholder, Row, Section, Segmented, Toggle } from '../components/ui'
 import { getKegelSettings, getProfile, saveKegelSettings, saveProfile } from '../lib/store'
-import { AVATARS } from '../lib/profile'
 import { clearAllData, exportBackup, importBackup } from '../lib/backup'
 import { KEGEL_LEVELS } from '../lib/kegel'
 import { supportsVibration } from '../lib/feedback'
@@ -13,7 +12,6 @@ const DEFAULT_KEGEL: KegelSettings = { levelId: 'beginner', sound: true, vibrati
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileType | null>(null)
   const [name, setName] = useState('')
-  const [avatar, setAvatar] = useState(AVATARS[0])
   const [heightCm, setHeightCm] = useState('')
   const [sex, setSex] = useState<Sex | ''>('')
   const [kegel, setKegel] = useState<KegelSettings>(DEFAULT_KEGEL)
@@ -28,7 +26,6 @@ export default function Profile() {
       if (p) {
         setProfile(p)
         setName(p.name)
-        setAvatar(p.avatar)
         setHeightCm(p.heightCm ? String(p.heightCm) : '')
         setSex(p.sex ?? '')
       }
@@ -37,18 +34,24 @@ export default function Profile() {
     })
   }, [])
 
-  async function handleSaveProfile() {
-    if (!name.trim()) return
+  /**
+   * Se guarda solo, como en Ajustes de iOS: al salir de un campo o al cambiar
+   * el sexo. Sin nombre no se guarda, porque el perfil lo necesita.
+   */
+  async function commitProfile(patch: { name?: string; heightCm?: string; sex?: Sex | '' } = {}) {
+    const n = (patch.name ?? name).trim()
+    if (!n) return
+    const h = patch.heightCm ?? heightCm
+    const sx = patch.sex ?? sex
     const p: ProfileType = {
-      name: name.trim(),
-      avatar,
+      name: n,
+      avatar: profile?.avatar ?? '',
       createdAt: profile?.createdAt ?? new Date().toISOString(),
-      heightCm: heightCm ? Number(heightCm) : null,
-      sex: sex || null,
+      heightCm: h ? Number(h) : null,
+      sex: sx || null,
     }
     await saveProfile(p)
     setProfile(p)
-    setStatus('Perfil guardado.')
   }
 
   async function updateKegel(patch: Partial<KegelSettings>) {
@@ -94,167 +97,135 @@ export default function Profile() {
   if (!loaded) {
     return (
       <div className="flex flex-1 flex-col">
-        <TopBar title="Ajustes" back />
-        <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+        <TopBar title="Ajustes" back large />
+        <Placeholder>Cargando…</Placeholder>
       </div>
     )
   }
 
+  const level = KEGEL_LEVELS.find((l) => l.id === kegel.levelId) ?? KEGEL_LEVELS[0]
+  const fieldClass =
+    'min-w-0 flex-1 bg-transparent text-right text-[17px] text-label-2 placeholder:text-label-3 focus:text-label focus:outline-none'
+
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title="Ajustes" back />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title="Ajustes" back large />
 
-      <div className="flex flex-col gap-4 p-4">
-        <Link
-          to="/medidas"
-          className="flex items-center gap-3 rounded-2xl bg-white/5 p-4 active:bg-white/10"
-        >
-          <span className="text-2xl">📏</span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-gray-100">Medidas</p>
-            <p className="text-xs text-gray-500">Peso, glúteos, cintura, % de grasa y tendencias</p>
+      <div className="flex flex-col gap-7">
+        <Section footer="Altura y sexo son opcionales: solo se usan para calcular tu % de grasa corporal en Medidas.">
+          <div className="flex items-center gap-4 px-4 py-3">
+            <Avatar name={name} size={56} />
+            <div className="min-w-0">
+              <p className="truncate text-[22px] font-semibold text-label">{name || 'Tu nombre'}</p>
+              <p className="text-[15px] text-label-2">Perfil en este dispositivo</p>
+            </div>
           </div>
-          <span className="text-gray-600">›</span>
-        </Link>
-
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="mb-1 text-sm font-medium text-gray-100">🌊 Kegel</p>
-          <p className="mb-3 text-xs text-gray-500">
-            Tu nivel define cuánto dura cada ejercicio y cuáles entran en la rotación.
-          </p>
-          <div className="mb-4 flex gap-2">
-            {KEGEL_LEVELS.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => updateKegel({ levelId: l.id as KegelLevelId, levelUpDismissedAt: undefined })}
-                className={`flex-1 rounded-lg py-2 text-xs font-medium ${
-                  kegel.levelId === l.id
-                    ? 'bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400'
-                    : 'bg-white/5 text-gray-400'
-                }`}
-              >
-                {l.label}
-                <span className="mt-0.5 block text-[10px] font-normal text-gray-500">
-                  {l.workSeconds}s / {l.restSeconds}s
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <label className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-200">🔊 Señales de sonido</span>
+          <label className="flex h-11 items-center gap-3 px-4">
+            <span className="text-[17px] text-label">Nombre</span>
             <input
-              type="checkbox"
-              checked={kegel.sound}
-              onChange={(e) => updateKegel({ sound: e.target.checked })}
-              className="h-5 w-5 accent-cyan-400"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => commitProfile()}
+              placeholder="Tu nombre"
+              className={fieldClass}
             />
           </label>
-
-          <label className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-200">📳 Vibración</span>
+          <label className="flex h-11 items-center gap-3 px-4">
+            <span className="text-[17px] text-label">Altura</span>
             <input
-              type="checkbox"
-              checked={kegel.vibration}
-              disabled={!canVibrate}
-              onChange={(e) => updateKegel({ vibration: e.target.checked })}
-              className="h-5 w-5 accent-cyan-400 disabled:opacity-30"
+              type="number"
+              inputMode="decimal"
+              value={heightCm}
+              onChange={(e) => setHeightCm(e.target.value)}
+              onBlur={() => commitProfile()}
+              placeholder="cm"
+              className={fieldClass}
             />
+            {heightCm && <span className="text-[17px] text-label-2">cm</span>}
           </label>
-          {!canVibrate && (
-            <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
-              Tu navegador no expone vibración. En iPhone Safari nunca la implementó, así que el ritmo se marca con
-              sonido — funciona incluso con el switch de silencio activado.
-            </p>
-          )}
-        </div>
+          <label className="flex h-11 items-center gap-3 px-4">
+            <span className="flex-1 text-[17px] text-label">Sexo</span>
+            <select
+              value={sex}
+              onChange={(e) => {
+                const v = e.target.value as Sex | ''
+                setSex(v)
+                void commitProfile({ sex: v })
+              }}
+              className="appearance-none bg-transparent text-right text-[17px] text-label-2 focus:outline-none"
+            >
+              <option value="">Sin indicar</option>
+              <option value="male">Hombre</option>
+              <option value="female">Mujer</option>
+            </select>
+          </label>
+        </Section>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="mb-2 text-sm font-medium text-gray-100">Tu perfil</p>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {AVATARS.map((a) => (
-              <button
-                key={a}
-                onClick={() => setAvatar(a)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full text-lg ${
-                  avatar === a ? 'bg-cyan-400/20 ring-1 ring-cyan-400' : 'bg-white/10'
-                }`}
-              >
-                {a}
-              </button>
-            ))}
+        <Section>
+          <Row to="/medidas" icon="tape" title="Medidas" subtitle="Peso, cintura, % de grasa y tendencias" />
+        </Section>
+
+        <Section header="Kegel" footer={`${level.workSeconds} s por ejercicio, ${level.restSeconds} s de descanso entre uno y otro, ${level.exercises} ejercicios por rutina.`}>
+          <div className="px-4 py-3">
+            <Segmented
+              label="Nivel de Kegel"
+              value={kegel.levelId}
+              onChange={(v) => updateKegel({ levelId: v as KegelLevelId, levelUpDismissedAt: undefined })}
+              options={KEGEL_LEVELS.map((l) => ({ value: l.id, label: l.label }))}
+            />
           </div>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Tu nombre"
-            className="mb-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600"
+          <Row
+            icon="speaker"
+            tone="kegel"
+            title="Señales de sonido"
+            trailing={
+              <Toggle tone="kegel" label="Señales de sonido" checked={kegel.sound} onChange={(v) => updateKegel({ sound: v })} />
+            }
           />
-
-          <p className="mb-1 text-xs text-gray-500">
-            Altura y sexo son opcionales — solo se usan para calcular tu % de grasa corporal en Medidas.
+          <Row
+            icon="vibrate"
+            tone={canVibrate ? 'kegel' : 'gray'}
+            title="Vibración"
+            disabled={!canVibrate}
+            trailing={
+              canVibrate ? (
+                <Toggle
+                  tone="kegel"
+                  label="Vibración"
+                  checked={kegel.vibration}
+                  onChange={(v) => updateKegel({ vibration: v })}
+                />
+              ) : (
+                <span className="text-[17px] text-label-3">No disponible</span>
+              )
+            }
+          />
+        </Section>
+        {!canVibrate && (
+          <p className="-mt-5 px-8 text-[13px] leading-snug text-label-2">
+            Safari en iPhone nunca implementó la vibración, así que el ritmo se marca con sonido. Funciona incluso con
+            el interruptor de silencio activado.
           </p>
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-gray-400">Altura (cm)</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={heightCm}
-                onChange={(e) => setHeightCm(e.target.value)}
-                placeholder="—"
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-gray-400">Sexo</span>
-              <select
-                value={sex}
-                onChange={(e) => setSex(e.target.value as Sex | '')}
-                className="rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm text-gray-100"
-              >
-                <option value="">—</option>
-                <option value="male">Hombre</option>
-                <option value="female">Mujer</option>
-              </select>
-            </label>
-          </div>
+        )}
 
-          <button
-            onClick={handleSaveProfile}
-            disabled={!name.trim()}
-            className="w-full rounded-lg bg-cyan-500 py-2.5 text-sm font-medium text-[#0b0d12] disabled:opacity-40"
-          >
-            Guardar
-          </button>
-        </div>
+        <Section
+          header="Tus datos"
+          footer={status || 'Todo se guarda solo en este dispositivo. Exportá un respaldo de vez en cuando para no perder tu historial.'}
+        >
+          <Row onClick={handleExport} icon="share" tone="gray" title="Exportar respaldo" chevron={false} />
+          <Row
+            onClick={() => fileInputRef.current?.click()}
+            icon="download"
+            tone="gray"
+            title="Importar respaldo"
+            chevron={false}
+          />
+          <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImportFile} className="hidden" />
+        </Section>
 
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="mb-1 text-sm font-medium text-gray-100">Tus datos</p>
-          <p className="mb-3 text-xs text-gray-500">
-            Todo se guarda solo en este dispositivo. Exportá un backup de vez en cuando para no perder tu historial.
-          </p>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleExport}
-              className="rounded-lg border border-white/15 py-2.5 text-sm text-gray-200 active:bg-white/10"
-            >
-              ⬇️ Exportar backup
-            </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="rounded-lg border border-white/15 py-2.5 text-sm text-gray-200 active:bg-white/10"
-            >
-              ⬆️ Importar backup
-            </button>
-            <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImportFile} className="hidden" />
-          </div>
-          {status && <p className="mt-3 text-xs text-cyan-300">{status}</p>}
-        </div>
-
-        <button onClick={handleReset} className="text-center text-xs text-red-400">
-          Borrar todos los datos de este dispositivo
-        </button>
+        <Section>
+          <Row onClick={handleReset} title="Borrar todos los datos" destructive />
+        </Section>
       </div>
     </div>
   )

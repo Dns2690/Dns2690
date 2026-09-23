@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import { Button, Placeholder, Row, Section } from '../components/ui'
 import { getExercise, imageUrl } from '../lib/exercises'
 import { deleteSession, getSession } from '../lib/store'
 import type { WorkoutSession } from '../lib/types'
@@ -20,40 +21,38 @@ export default function SessionDetail() {
     navigate('/historial', { replace: true })
   }
 
-  if (session === undefined) {
+  if (session === undefined || session === null) {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Entrenamiento" back />
-        <p className="p-6 text-center text-sm text-gray-500">Cargando…</p>
+        <Placeholder>{session === undefined ? 'Cargando…' : 'No se encontró el entrenamiento.'}</Placeholder>
       </div>
     )
   }
 
-  if (session === null) {
-    return (
-      <div className="flex flex-1 flex-col">
-        <TopBar title="Entrenamiento" back />
-        <p className="p-6 text-center text-sm text-gray-500">No se encontró el entrenamiento.</p>
-      </div>
-    )
-  }
+  const started = new Date(session.startedAt)
+  const minutes = session.finishedAt
+    ? Math.round((new Date(session.finishedAt).getTime() - started.getTime()) / 60000)
+    : null
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title={session.routineName} back />
-      <div className="flex flex-col gap-3 p-4">
-        <p className="text-xs text-gray-500">
-          {new Date(session.startedAt).toLocaleString('es')}
-          {session.finishedAt ? '' : ' · en curso'}
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title={session.routineName} back="Historial" large />
+
+      <div className="flex flex-col gap-7">
+        <p className="-mt-1 px-4 text-[15px] text-label-2 first-letter:uppercase">
+          {started.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
+          {' · '}
+          {started.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+          {minutes !== null ? ` · ${minutes} min` : ' · en curso'}
         </p>
 
         {!session.finishedAt && (
-          <button
-            onClick={() => navigate(`/entrenar/${session.id}`)}
-            className="rounded-lg bg-amber-400 py-2 text-sm font-medium text-[#0b0d12]"
-          >
-            Continuar entrenamiento
-          </button>
+          <div className="px-4">
+            <Button tone="warn" icon="play" onClick={() => navigate(`/entrenar/${session.id}`)}>
+              Continuar entrenamiento
+            </Button>
+          </div>
         )}
 
         {session.exercises.map((se, i) => {
@@ -61,33 +60,31 @@ export default function SessionDetail() {
           if (!ex) return null
           const doneSets = se.sets.filter((s) => s.done)
           return (
-            <div key={i} className="rounded-xl bg-white/5 p-3">
-              <button
-                type="button"
-                onClick={() => navigate(`/ejercicio/${ex.id}`)}
-                className="mb-1 flex items-center gap-2 text-left"
-              >
-                <img src={imageUrl(ex)} alt="" className="h-10 w-10 rounded-lg bg-white/10 object-cover" />
-                <p className="truncate text-sm font-medium capitalize text-gray-100">{ex.name}</p>
-              </button>
-              {doneSets.length === 0 ? (
-                <p className="pl-1 text-xs text-gray-500">Sin series registradas</p>
-              ) : (
-                <ul className="flex flex-wrap gap-2 pl-1 text-xs text-gray-300">
-                  {doneSets.map((s, j) => (
-                    <li key={j} className="rounded bg-white/10 px-2 py-1">
-                      {s.weight ?? '-'}kg × {s.reps ?? '-'}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <Section key={i}>
+              <Row
+                to={`/ejercicio/${ex.id}`}
+                leading={<img src={imageUrl(ex)} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-cover" />}
+                title={<span className="font-semibold capitalize">{ex.name}</span>}
+                subtitle={doneSets.length ? `${doneSets.length} ${doneSets.length === 1 ? 'serie' : 'series'}` : 'Sin series registradas'}
+              />
+              {doneSets.map((s, j) => (
+                <Row
+                  key={j}
+                  title={<span className="text-label-2">Serie {j + 1}</span>}
+                  detail={
+                    <span className="tabular-nums text-label">
+                      {s.weight ?? '–'} kg × {s.reps ?? '–'}
+                    </span>
+                  }
+                />
+              ))}
+            </Section>
           )
         })}
 
-        <button onClick={handleDelete} className="mt-4 text-sm text-red-400">
-          Eliminar entrenamiento
-        </button>
+        <Section>
+          <Row onClick={handleDelete} title="Eliminar entrenamiento" destructive />
+        </Section>
       </div>
     </div>
   )

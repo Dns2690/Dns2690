@@ -1,13 +1,18 @@
+import type { IconName, Tone } from '../components/Icon'
+
 export type ModuleId = 'fitness' | 'kegel' | 'mindfulness'
 
 export interface ModuleTheme {
   id: ModuleId
   label: string
-  icon: string
-  /** Color de marca del módulo, validado contra la superficie oscura. */
+  icon: IconName
+  tone: Tone
+  /** Acento de UI: botones, íconos, tinte. */
   hex: string
-  /** Versión clara del mismo tono, para texto sobre fondo casi negro. */
+  /** Versión para texto sobre negro o sobre celda. */
   textHex: string
+  /** Escalón para marcas de datos (gráficos, tira de constancia). */
+  dataHex: string
   text: string
   strongText: string
   solid: string
@@ -19,62 +24,69 @@ export interface ModuleTheme {
 }
 
 /**
- * Un tono por módulo.
+ * Un tono por módulo, en dos roles.
  *
- * Los tres colores base salieron de validar la paleta contra la superficie real
- * de la app (#0b0d12): quedan dentro de la misma banda de luminosidad —así
- * ningún módulo se ve más "fuerte" que otro— y su separación mínima bajo
- * daltonismo es ΔE 13.9 en protanopía, muy por encima del piso de 8.
+ * El acento es el color de la interfaz: el verde neón de ejercicios da 15.7:1
+ * sobre negro, el azul de Kegel 5.8:1 y el morado de meditación 6.0:1, y el
+ * glifo negro de los íconos tiene ese mismo contraste encima de cada uno.
  *
- * El texto usa el escalón 400 del mismo tono: sobre un fondo casi negro, el
- * color de relleno queda demasiado apagado para leerse cómodo. Lo que
- * identifica al módulo es el tono, no el escalón exacto.
+ * Los datos usan otro escalón del mismo tono, validado con los tres juntos
+ * sobre #000: dentro de la banda de luminosidad y con el peor par bajo
+ * daltonismo en ΔE 10.4 (el mínimo es 8). Los acentos no sirven para eso: el
+ * azul y el morado de iOS se confunden en protanopía (ΔE 4.3), y el neón,
+ * como marca de datos, encandila al lado de los otros.
  */
 export const MODULE_THEMES: Record<ModuleId, ModuleTheme> = {
   fitness: {
     id: 'fitness',
     label: 'Ejercicios',
-    icon: '🏋️',
-    hex: '#0891b2',
-    textHex: '#22d3ee',
-    text: 'text-cyan-400',
-    strongText: 'text-cyan-300',
-    solid: 'bg-cyan-500',
-    solidActive: 'active:bg-cyan-400',
-    softBg: 'bg-cyan-500/10',
-    softBorder: 'border-cyan-500/30',
-    ring: 'ring-cyan-400',
-    dot: 'bg-cyan-400',
+    icon: 'dumbbell',
+    tone: 'fit',
+    hex: '#3cff73',
+    textHex: '#3cff73',
+    dataHex: '#16af49',
+    text: 'text-fit-400',
+    strongText: 'text-fit-300',
+    solid: 'bg-fit-500',
+    solidActive: 'active:bg-fit-600',
+    softBg: 'bg-fit-500/12',
+    softBorder: 'border-fit-500/30',
+    ring: 'ring-fit-400',
+    dot: 'bg-fit-400',
   },
   kegel: {
     id: 'kegel',
     label: 'Kegel',
-    icon: '🌊',
-    hex: '#f43f5e',
-    textHex: '#fb7185',
-    text: 'text-rose-400',
-    strongText: 'text-rose-300',
-    solid: 'bg-rose-500',
-    solidActive: 'active:bg-rose-400',
-    softBg: 'bg-rose-500/10',
-    softBorder: 'border-rose-500/30',
-    ring: 'ring-rose-400',
-    dot: 'bg-rose-400',
+    icon: 'pulse',
+    tone: 'kegel',
+    hex: '#0a84ff',
+    textHex: '#409cff',
+    dataHex: '#085dc7',
+    text: 'text-kegel-400',
+    strongText: 'text-kegel-300',
+    solid: 'bg-kegel-500',
+    solidActive: 'active:bg-kegel-600',
+    softBg: 'bg-kegel-500/15',
+    softBorder: 'border-kegel-500/30',
+    ring: 'ring-kegel-400',
+    dot: 'bg-kegel-400',
   },
   mindfulness: {
     id: 'mindfulness',
     label: 'Mindfulness',
-    icon: '🧘',
-    hex: '#8b5cf6',
-    textHex: '#a78bfa',
-    text: 'text-violet-400',
-    strongText: 'text-violet-300',
-    solid: 'bg-violet-500',
-    solidActive: 'active:bg-violet-400',
-    softBg: 'bg-violet-500/10',
-    softBorder: 'border-violet-500/30',
-    ring: 'ring-violet-400',
-    dot: 'bg-violet-400',
+    icon: 'lotus',
+    tone: 'mind',
+    hex: '#bf5af2',
+    textHex: '#c77ef4',
+    dataHex: '#b95dfc',
+    text: 'text-mind-400',
+    strongText: 'text-mind-300',
+    solid: 'bg-mind-500',
+    solidActive: 'active:bg-mind-600',
+    softBg: 'bg-mind-500/15',
+    softBorder: 'border-mind-500/30',
+    ring: 'ring-mind-400',
+    dot: 'bg-mind-400',
   },
 }
 

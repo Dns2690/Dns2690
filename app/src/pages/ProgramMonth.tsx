@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import Icon from '../components/Icon'
+import { Placeholder, Row, Section } from '../components/ui'
 import { getExercise, imageUrl } from '../lib/exercises'
 import { getProgramMonth } from '../lib/program'
 import { startProgramSession } from '../lib/workout'
@@ -16,7 +18,7 @@ export default function ProgramMonth() {
     return (
       <div className="flex flex-1 flex-col">
         <TopBar title="Programa" back />
-        <p className="p-6 text-center text-sm text-gray-500">Mes no encontrado.</p>
+        <Placeholder>Mes no encontrado.</Placeholder>
       </div>
     )
   }
@@ -29,50 +31,46 @@ export default function ProgramMonth() {
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-6">
-      <TopBar title={`Mes ${data.month} · ${data.title}`} back />
+    <div className="flex flex-1 flex-col pb-8">
+      <TopBar title={`Mes ${data.month}`} back large />
 
-      <div className="flex flex-col gap-4 p-4">
-        <div className="rounded-2xl bg-white/5 p-4">
-          <p className="text-sm font-medium text-cyan-300">{data.focus}</p>
-          <p className="mt-2 text-sm text-gray-300">{data.description}</p>
-          <p className="mt-2 text-xs text-gray-500">{data.weeks} semanas · 3 sesiones por semana</p>
+      <div className="flex flex-col gap-7">
+        <div className="px-4">
+          <p className="text-[22px] font-bold leading-tight tracking-tight text-label">{data.title}</p>
+          <p className="mt-1 text-[15px] font-semibold text-fit-400">{data.focus}</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-label-2">{data.description}</p>
+          <p className="mt-3 flex items-center gap-1.5 text-[13px] text-label-2">
+            <Icon name="calendar" size={16} />
+            {data.weeks} semanas · 3 sesiones por semana
+          </p>
         </div>
 
         {data.days.map((d) => (
-          <div key={d.day} className="rounded-2xl bg-white/5 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-100">{d.name}</p>
-              <button
-                onClick={() => handleStart(d.day)}
-                disabled={starting !== null}
-                className="rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-medium text-[#0b0d12] active:bg-cyan-400 disabled:opacity-50"
-              >
-                Empezar
-              </button>
-            </div>
-            <div className="flex flex-col gap-2">
-              {d.exercises.map((pe, i) => {
-                const ex = getExercise(pe.exerciseId)
-                if (!ex) return null
-                return (
-                  <Link
-                    key={i}
-                    to={`/ejercicio/${ex.id}`}
-                    className="flex items-center gap-2 rounded-lg active:bg-white/10"
-                  >
-                    <img src={imageUrl(ex)} alt="" className="h-9 w-9 flex-shrink-0 rounded-lg bg-white/10 object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium capitalize text-gray-200">{ex.name}</p>
-                      <p className="text-[11px] text-gray-500">
-                        {pe.sets}×{pe.reps} · descanso {pe.restSeconds}s
-                      </p>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
+          <Section key={d.day} header={d.name}>
+            {d.exercises.map((pe, i) => {
+              const ex = getExercise(pe.exerciseId)
+              if (!ex) return null
+              return (
+                <Row
+                  key={i}
+                  to={`/ejercicio/${ex.id}`}
+                  leading={<img src={imageUrl(ex)} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-cover" />}
+                  title={<span className="capitalize">{ex.name}</span>}
+                  subtitle={`${pe.sets} × ${pe.reps} · descanso ${pe.restSeconds} s`}
+                />
+              )
+            })}
+            <Row
+              onClick={() => handleStart(d.day)}
+              disabled={starting !== null}
+              title={
+                <span className="flex items-center gap-2 font-semibold text-fit-400">
+                  <Icon name="play" size={16} />
+                  Empezar esta sesión
+                </span>
+              }
+            />
+          </Section>
         ))}
       </div>
     </div>
