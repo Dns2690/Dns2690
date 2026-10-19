@@ -1,48 +1,43 @@
-<h1 align="center">Denis Salazar</h1>
-<p align="center">Full Stack Developer · Founder at Boucardi · Costa Rica 🇨🇷</p>
+# Denis Salazar
 
----
-I build business software end to end — from the Oracle database up to the frontend.
-Most of my work happens at **Boucardi**, the software company I run, where we build
-custom platforms for companies that need something more specific than an
-off-the-shelf tool.
+**Software Developer · Founder at Boucardi · Costa Rica**
 
-### What I'm building
+[LinkedIn](https://www.linkedin.com/in/dns2690/) · [Email](mailto:denis@boucardi.com)
 
-**BouApps** — SaaS platform for company management.
-`Oracle APEX` `Oracle Cloud Infrastructure` `PL/SQL`
-> Inventory, billing and operations for small businesses in Costa Rica — replacing
-> spreadsheets with one system, running on Oracle APEX over OCI.
+I develop business applications, backend services and websites through **Boucardi**, where I have worked on software projects since May 2023. My work includes Oracle data models, SQL and PL/SQL, Java services, REST integrations and web interfaces.
 
-**Firmador** — electronic invoice signing API for Costa Rica.
-`Spring Boot` `Java` `Oracle` `XAdES`
-> Multi-tenant REST API that signs comprobantes electrónicos v4.4 with
-> XAdES digital signatures and submits them to Hacienda (the tax authority).
-> Async pipeline, certificates in OCI, one API serving multiple companies.
+My hands-on experience with **Oracle APEX** has been intermittent over approximately the last year. I also bring a background in industrial instrumentation and metrology, including calibration, technical documentation and support for automation systems.
 
-**BouConta** — accounting automation on top of Firmador.
-`Java` `React` `Cloudflare Workers`
-> Every signed or received invoice gets parsed and each line auto-categorized
-> into an accounting account, feeding monthly tax reports (D-104) with almost
-> no manual data entry.
+## Work at Boucardi
 
-**Client web platforms** — marketing sites and content-driven apps.
-`Astro` `Strapi` `React` `TypeScript`
+- **BOU / BouApps** — business application development with Oracle APEX and Oracle Database, including data modeling, PL/SQL logic, custom authentication and role-based access. The application is evolving; its planned business modules are at different stages of development.
+- **Firmador** — electronic-invoicing services for Costa Rica, built with Java and Spring Boot. Work includes XML v4.4 validation, XAdES signatures, integration with Hacienda's REST services, asynchronous processing and OCI storage.
+- **BouConta** — work on invoice XML processing and accounting classification using CABYS-based rules.
+- **Web projects** — websites and interfaces built with React, TypeScript and Astro, with deployments using OCI, Linux and Cloudflare.
 
-### How I work
+Most Boucardi repositories are private. The public repositories below include study material and academic projects.
 
-- Backend-first: I design the data model before I write a line of UI.
-- Comfortable owning the whole path — schema, API, deployment on OCI or Cloudflare, and the frontend on top.
-- I like the unglamorous parts: integrations, migrations, government APIs, and making slow queries fast.
+## Selected public work
 
-### Stack
+| Repository | Scope |
+| --- | --- |
+| [OCI Architect Associate study guide](https://github.com/Dns2690/Oci-arch-assoc-guide) | Independent study material with OCI scenarios, practice and exam modes, explanations and references to Oracle documentation. Not an official Oracle resource. |
+| [Restaurant management](https://github.com/Dns2690/Proyecto_Final_Progra5) | Academic Java project with a desktop interface, data access classes and a MySQL database. |
+| [Vehicle rentals](https://github.com/Dns2690/Rentals) | Academic Python console application with JSON storage, users, vehicles, rental records and role-based menus. |
 
-**Daily** — Oracle (APEX, PL/SQL, OCI) · Java / Spring Boot · C# / .NET · PostgreSQL
-**Frontend** — TypeScript · React · Astro · Strapi
-**Also** — Python · Node.js · Docker · Cloudflare · Figma
+## Technologies used in my projects
 
-### Reach me
+- **Oracle and backend:** Oracle APEX, SQL, PL/SQL, Java, Spring Boot, JDBC, REST, XML and JSON.
+- **Web:** JavaScript, TypeScript, React, Astro, HTML and CSS.
+- **Tools and deployment:** Git, GitHub, Docker, Linux, Oracle Cloud Infrastructure and Cloudflare.
 
-[LinkedIn](https://www.linkedin.com/in/denis-salazar-6754a4259) · denis@boucardi.com · dsalazar260990@outlook.com
+## Oracle certifications
 
-<sub>Open to freelance work, consulting, and full-time roles.</sub>
+- [Oracle Cloud Infrastructure Certified Architect Associate](https://catalog-education.oracle.com/pls/certview/sharebadge?id=0E2BE1CB973B0B87D83870506E8BA2354598F2D06792031FDBA9E7FF026804F3) — earned October 2026; valid through October 2028.
+- [Oracle Cloud Infrastructure Certified Foundations Associate](https://catalog-education.oracle.com/pls/certview/sharebadge?id=288898CD261A33EFF0C0C98E6F9F086F69C498AEF4164FAEA44108F706DE2C46) — earned August 2026; valid through August 2028.
+
+## Education and opportunities
+
+Technical qualification in Software Development from Universidad CENFOTEC, completed in 2023. Currently pursuing a bachelor's degree in Systems Engineering at UISIL, with completion expected in 2027.
+
+Interested in software development opportunities involving Oracle APEX, PL/SQL, Java and API integrations.
