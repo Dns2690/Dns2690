@@ -17,14 +17,6 @@ I also bring a background in industrial instrumentation and metrology, including
 
 Most Boucardi repositories are private. The public repositories below include study material and academic projects.
 
-## Selected public work
-
-| Repository | Scope |
-| --- | --- |
-| [OCI Architect Associate study guide](https://github.com/Dns2690/Oci-arch-assoc-guide) | Independent study material with OCI scenarios, practice and exam modes, explanations and references to Oracle documentation. Not an official Oracle resource. |
-| [Restaurant management](https://github.com/Dns2690/Proyecto_Final_Progra5) | Academic Java project with a desktop interface, data access classes and a MySQL database. |
-| [Vehicle rentals](https://github.com/Dns2690/Rentals) | Academic Python console application with JSON storage, users, vehicles, rental records and role-based menus. |
-
 ## Technologies used in my projects
 
 - **Oracle and backend:** Oracle APEX, SQL, PL/SQL, Java, Spring Boot, JDBC, REST, XML and JSON.
