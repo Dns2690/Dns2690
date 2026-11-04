@@ -6,7 +6,7 @@
 
 I develop business applications, backend services and websites through **Boucardi**, where I have worked on software projects since May 2023. My work includes Oracle data models, SQL and PL/SQL, Java services, REST integrations and web interfaces.
 
-My hands-on experience with **Oracle APEX** has been intermittent over approximately the last year. I also bring a background in industrial instrumentation and metrology, including calibration, technical documentation and support for automation systems.
+I also bring a background in industrial instrumentation and metrology, including calibration, technical documentation and support for automation systems.
 
 ## Work at Boucardi
 
